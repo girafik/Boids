@@ -15,19 +15,20 @@ public class BoidsRenderer implements Renderer {
 	Boid boids[];
 	Vector bounds;
 	float ratio;
+	List<Boid> closeBoids = new ArrayList<Boid>();
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		Boid[] newBoids = boids.clone();
-		for (Boid boid : newBoids) {
-			List<Boid> closeBoids = new ArrayList<Boid>();
+
+		for (Boid boid : boids) {
+			closeBoids.clear();
 			for (Boid otherBoid : boids) {
 				if (otherBoid != boid
 						&& boid.location.distanceTo(otherBoid.location) < RADIUS) {
 					closeBoids.add(otherBoid);
 				}
 			}
-			boid.step(closeBoids.toArray(new Boid[0]), bounds);
+			boid.step(closeBoids, bounds);
 		}
 
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -41,8 +42,6 @@ public class BoidsRenderer implements Renderer {
 					-3.0f);
 			boid.draw(gl);
 		}
-		boids = newBoids;
-
 	}
 
 	@Override
@@ -59,7 +58,7 @@ public class BoidsRenderer implements Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		boids = new Boid[40];
+		boids = new Boid[70];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
 		}

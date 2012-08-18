@@ -40,7 +40,8 @@ public class Vector {
 	}
 
 	public float distanceTo(Vector that) {
-		return this.copy().subtract(that).magnitude();
+		return FloatMath.sqrt((that.x - this.x) * (that.x - this.x)
+				+ (that.y - this.y) * (that.y - this.y));
 	}
 
 	public Vector divide(float c) {
@@ -50,7 +51,7 @@ public class Vector {
 	}
 
 	public float magnitude() {
-		return FloatMath.sqrt(this.copy().multiply(this));
+		return FloatMath.sqrt(x * x + y * y);
 	}
 
 	public float multiply(Vector that) {
@@ -62,6 +63,6 @@ public class Vector {
 	}
 
 	public Vector copy() {
-		return new Vector(this.x, this.y);
+		return new Vector(x, y);
 	}
 }

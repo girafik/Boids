@@ -3,6 +3,7 @@ package info.girafik.boids;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.List;
 import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -22,16 +23,11 @@ public class Boid {
 	Vector location;
 	Vector velocity;
 
-	private FloatBuffer mFVertexBuffer;
-	private FloatBuffer mColorBuffer;
-	private ByteBuffer mIndexBuffer;
+	private static FloatBuffer mFVertexBuffer;
+	private static FloatBuffer mColorBuffer;
+	private static ByteBuffer mIndexBuffer;
 
-	public Boid() {
-		Random r = new Random();
-		location = new Vector(0, 0);
-		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
-				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
-
+	static {
 		byte indices[] = { 0, 3, 1, 0, 2, 3 };
 		float vertices[] = { -side, -side, side, -side, -side, side, side, side };
 		float colors[] = { 1.0f, 1.0f, 0.0f, 1.0f, // yellow
@@ -57,6 +53,13 @@ public class Boid {
 		mIndexBuffer.position(0);
 	}
 
+	public Boid() {
+		Random r = new Random();
+		location = new Vector(0, 0);
+		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
+				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
+	}
+
 	public void draw(GL10 gl) {
 		gl.glFrontFace(GL11.GL_CW);
 		gl.glVertexPointer(2, GL11.GL_FLOAT, 0, mFVertexBuffer);
@@ -66,8 +69,8 @@ public class Boid {
 		gl.glFrontFace(GL11.GL_CCW);
 	}
 
-	public void step(Boid[] neighbours, Vector bounds) {
-		Vector acceleration = flock(neighbours, bounds);
+	public void step(List<Boid> closeBoids, Vector bounds) {
+		Vector acceleration = flock(closeBoids, bounds);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
 		location.add(velocity);
 		rotate(bounds);
@@ -88,27 +91,27 @@ public class Boid {
 
 	}
 
-	private Vector flock(Boid[] neighbors, Vector bounds) {
-		Vector separation = separate(neighbors, bounds).multiply(
+	private Vector flock(List<Boid> closeBoids, Vector bounds) {
+		Vector separation = separate(closeBoids, bounds).multiply(
 				SEPARATION_WEIGHT);
-		Vector alignment = align(neighbors).multiply(ALIGNMENT_WEIGHT);
-		Vector cohesion = cohere(neighbors, bounds).multiply(COHESION_WEIGHT);
+		Vector alignment = align(closeBoids).multiply(ALIGNMENT_WEIGHT);
+		Vector cohesion = cohere(closeBoids, bounds).multiply(COHESION_WEIGHT);
 		return separation.add(alignment).add(cohesion);
 	}
 
 	/*
 	 * Move to center of the neighbors
 	 */
-	private Vector cohere(Boid[] neighbors, Vector bounds) {
+	private Vector cohere(List<Boid> closeBoids, Vector bounds) {
 		Vector sum = new Vector(0, 0);
-		for (Boid boid : neighbors) {
+		for (Boid boid : closeBoids) {
 			sum.add(boid.location);
 		}
 
-		if (neighbors.length == 0)
+		if (closeBoids.size() == 0)
 			return sum;
 
-		return steerTo(sum.divide(neighbors.length));
+		return steerTo(sum.divide(closeBoids.size()));
 	}
 
 	private Vector steerTo(Vector target) {
@@ -132,21 +135,21 @@ public class Boid {
 		return steer;
 	}
 
-	private Vector align(Boid[] neighbors) {
+	private Vector align(List<Boid> closeBoids) {
 		Vector mean = new Vector(0, 0);
-		for (Boid boid : neighbors) {
+		for (Boid boid : closeBoids) {
 			mean.add(boid.velocity);
 		}
-		if (neighbors.length != 0) {
-			mean.divide(neighbors.length);
+		if (closeBoids.size() != 0) {
+			mean.divide(closeBoids.size());
 		}
 		return mean.limit(MAX_FORCE);
 	}
 
-	private Vector separate(Boid[] neighbors, Vector bounds) {
+	private Vector separate(List<Boid> closeBoids, Vector bounds) {
 		Vector mean = new Vector(0, 0);
 		int count = 0;
-		for (Boid boid : neighbors) {
+		for (Boid boid : closeBoids) {
 			float d = location.distanceTo(boid.location);
 			if (d > 0 && d < DESIRED_SEPARATION) {
 				mean.add(location.copy().subtract(boid.location).normalize()
