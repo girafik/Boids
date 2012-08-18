@@ -58,7 +58,7 @@ public class BoidsRenderer implements Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		boids = new Boid[70];
+		boids = new Boid[50];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
 		}

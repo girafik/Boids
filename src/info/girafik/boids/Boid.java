@@ -11,7 +11,7 @@ import javax.microedition.khronos.opengles.GL11;
 
 public class Boid {
 
-	static float side = 0.02f;
+	static float side = 0.025f;
 	private static final float MAX_VELOCITY = 0.01f;
 	private static final float DESIRED_SEPARATION = 0.1f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
