@@ -64,7 +64,7 @@ public class BoidsRenderer implements Renderer {
 		}
 		gl.glDisable(GL11.GL_DITHER);
 		gl.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_FASTEST);
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
 		gl.glEnable(GL11.GL_CULL_FACE);
 		gl.glShadeModel(GL11.GL_SMOOTH);
 		gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);

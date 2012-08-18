@@ -11,7 +11,7 @@ import javax.microedition.khronos.opengles.GL11;
 
 public class Boid {
 
-	static float side = 0.03f;
+	static float side = 0.02f;
 	private static final float MAX_VELOCITY = 0.01f;
 	private static final float DESIRED_SEPARATION = 0.1f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
@@ -30,10 +30,11 @@ public class Boid {
 	static {
 		byte indices[] = { 0, 3, 1, 0, 2, 3 };
 		float vertices[] = { -side, -side, side, -side, -side, side, side, side };
-		float colors[] = { 1.0f, 1.0f, 0.0f, 1.0f, // yellow
-				1.0f, 0.6f, 0.0f, 1.0f,// orange
-				1.0f, 0.6f, 1.0f, 1.0f,// orange
-				1.0f, 1.0f, 0.0f, 1.0f // yellow
+
+		float colors[] = { 0.8f, 0.8f, 0.8f, 1.0f, //
+				0.85f, 0.6f, 0.0f, 1.0f,//
+				0.85f, 0.6f, 0.0f, 1.0f,//
+				0.4f, 0.2f, 0.0f, 1.0f //
 		};
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
