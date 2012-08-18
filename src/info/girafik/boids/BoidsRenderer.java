@@ -2,7 +2,6 @@ package info.girafik.boids;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -12,13 +11,13 @@ import android.opengl.GLSurfaceView.Renderer;
 
 public class BoidsRenderer implements Renderer {
 
-	private static final double RADIUS = 0.4;
+	private static final double RADIUS = 0.6;
 	Boid boids[];
-	private static float border = 0.0f;
+	Vector bounds;
+	float ratio;
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		Vector bounds = new Vector(1.2, 1.2);
 		Boid[] newBoids = boids.clone();
 		for (Boid boid : newBoids) {
 			List<Boid> closeBoids = new ArrayList<Boid>();
@@ -52,14 +51,15 @@ public class BoidsRenderer implements Renderer {
 
 		gl.glMatrixMode(GL11.GL_PROJECTION);
 		gl.glLoadIdentity();
-		float ratio = (float) width / height;
-		// gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+		ratio = (float) width / height;
 		gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+
+		bounds = new Vector(ratio * 3, 1 * 3);
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		boids = new Boid[50];
+		boids = new Boid[40];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
 		}

@@ -10,14 +10,14 @@ import javax.microedition.khronos.opengles.GL11;
 
 public class Boid {
 
-	private static float side = 0.04f;
-	private static final double MAX_VELOCITY = 0.005;
-	private static final double DESIRED_SEPARATION = 0.05;
-	private static final double SEPARATION_WEIGHT = 0.01;
-	private static final double ALIGNMENT_WEIGHT = 0.3;
-	private static final double COHESION_WEIGHT = 0.1;
-	private static final double MAX_FORCE = 0.001;
-	private static final double INERTION = 0.00001;
+	static float side = 0.03f;
+	private static final float MAX_VELOCITY = 0.01f;
+	private static final float DESIRED_SEPARATION = 0.1f;
+	private static final float SEPARATION_WEIGHT = 0.05f;
+	private static final float ALIGNMENT_WEIGHT = 0.2f;
+	private static final float COHESION_WEIGHT = 0.2f;
+	private static final float MAX_FORCE = 0.001f;
+	private static final float INERTION = 0.001f;
 
 	Vector location;
 	Vector velocity;
@@ -28,17 +28,17 @@ public class Boid {
 
 	public Boid() {
 		Random r = new Random();
-		location = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat(),
-				(r.nextBoolean() ? 1f : -1f) * r.nextFloat());
+		location = new Vector(0, 0);
 		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
 				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
 
 		byte indices[] = { 0, 3, 1, 0, 2, 3 };
 		float vertices[] = { -side, -side, side, -side, -side, side, side, side };
-		float colors[] = { 1.0f, 0.0f, 0.0f, 0.8f, 
-				0.0f, 1.0f, 0.0f, 0.8f,
-				0.0f, 0.0f, 1.0f, 0.8f, 
-				1.0f, 1.0f, 1.0f, 0.8f };
+		float colors[] = { 1.0f, 1.0f, 0.0f, 1.0f, // yellow
+				1.0f, 0.6f, 0.0f, 1.0f,// orange
+				1.0f, 0.6f, 1.0f, 1.0f,// orange
+				1.0f, 1.0f, 0.0f, 1.0f // yellow
+		};
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
@@ -73,19 +73,17 @@ public class Boid {
 		rotate(bounds);
 	}
 
-	
 	private void rotate(Vector bounds) {
-		double delta = 0.05;
 		if (location.x >= bounds.x) {
-			location.x = -bounds.x + delta;
+			location.x = -bounds.x;
 		} else if (location.x <= -bounds.x) {
-			location.x = bounds.x - delta;
+			location.x = bounds.x;
 		}
 
 		if (location.y >= bounds.y) {
-			location.y = -bounds.y + delta;
+			location.y = -bounds.y;
 		} else if (location.y <= -bounds.y) {
-			location.y = bounds.y - delta;
+			location.y = bounds.y;
 		}
 
 	}
@@ -115,7 +113,7 @@ public class Boid {
 
 	private Vector steerTo(Vector target) {
 		Vector desired = target.subtract(location);
-		double d = desired.magnitude();
+		float d = desired.magnitude();
 		Vector steer = null;
 
 		if (d > 0) {
@@ -149,7 +147,7 @@ public class Boid {
 		Vector mean = new Vector(0, 0);
 		int count = 0;
 		for (Boid boid : neighbors) {
-			double d = location.distanceTo(boid.location);
+			float d = location.distanceTo(boid.location);
 			if (d > 0 && d < DESIRED_SEPARATION) {
 				mean.add(location.copy().subtract(boid.location).normalize()
 						.divide(d));
