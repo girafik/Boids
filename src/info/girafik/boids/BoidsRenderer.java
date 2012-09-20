@@ -7,15 +7,26 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
+import android.content.Context;
 import android.opengl.GLSurfaceView.Renderer;
+import android.view.Display;
+import android.view.Surface;
+import android.view.WindowManager;
 
 public class BoidsRenderer implements Renderer {
 
-	private static final double RADIUS = 0.6;
+	private static final double RADIUS = 0.5;
+	private static float DISTANCE;
 	Boid boids[];
 	Vector bounds;
 	float ratio;
 	List<Boid> closeBoids = new ArrayList<Boid>();
+	private Context context;
+	private int rotation = Surface.ROTATION_0;
+
+	public BoidsRenderer(Context context) {
+		this.context = context;
+	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
@@ -39,13 +50,14 @@ public class BoidsRenderer implements Renderer {
 		for (Boid boid : boids) {
 			gl.glLoadIdentity();
 			gl.glTranslatef((float) boid.location.x, (float) boid.location.y,
-					-3.0f);
+					-DISTANCE);
 			boid.draw(gl);
 		}
 	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
+
 		gl.glViewport(0, 0, width, height);
 
 		gl.glMatrixMode(GL11.GL_PROJECTION);
@@ -53,12 +65,27 @@ public class BoidsRenderer implements Renderer {
 		ratio = (float) width / height;
 		gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
 
-		bounds = new Vector(ratio * 3, 1 * 3);
+		rotation = ((WindowManager) context.getApplicationContext()
+				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
+				.getRotation();
+		switch (rotation) {
+		case Surface.ROTATION_0:
+		case Surface.ROTATION_180:
+			DISTANCE = 5f;
+			break;
+		case Surface.ROTATION_90:
+		case Surface.ROTATION_270:
+			DISTANCE = 5f / ratio;
+			break;
+		}
+
+		bounds = new Vector(ratio * DISTANCE, 1 * DISTANCE);
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		boids = new Boid[50];
+
+		boids = new Boid[55];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
 		}
@@ -67,9 +94,8 @@ public class BoidsRenderer implements Renderer {
 
 		gl.glEnable(GL11.GL_CULL_FACE);
 		gl.glShadeModel(GL11.GL_SMOOTH);
-		gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+		// gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		gl.glDisable(GL11.GL_DEPTH_TEST);
 		gl.glEnable(GL11.GL_BLEND);
-
 	}
 }

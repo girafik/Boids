@@ -11,7 +11,7 @@ import javax.microedition.khronos.opengles.GL11;
 
 public class Boid {
 
-	static float side = 0.025f;
+	static float side = 0.02f;
 	private static final float MAX_VELOCITY = 0.01f;
 	private static final float DESIRED_SEPARATION = 0.1f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
@@ -28,13 +28,11 @@ public class Boid {
 	private static ByteBuffer mIndexBuffer;
 
 	static {
-		byte indices[] = { 0, 3, 1, 0, 2, 3 };
-		float vertices[] = { -side, -side, side, -side, -side, side, side, side };
-
-		float colors[] = { 0.8f, 0.8f, 0.8f, 1.0f, //
-				0.85f, 0.6f, 0.0f, 1.0f,//
-				0.85f, 0.6f, 0.0f, 1.0f,//
-				0.4f, 0.2f, 0.0f, 1.0f //
+		byte indices[] = { 0, 1, 2 };
+		float[] vertices = { 0f, side, 0f, -side, -side, 0f, side, -side, 0f };
+		float colors[] = { 0.8f, 0.8f, 0.2f, 1.0f, //
+				0.8f, 0.8f, 0.2f, 1.0f,//
+				0.8f, 0.8f, 0.2f, 1.0f,//
 		};
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
@@ -56,7 +54,7 @@ public class Boid {
 
 	public Boid() {
 		Random r = new Random();
-		location = new Vector(0, 0);
+		location = new Vector(r.nextFloat()*3, r.nextFloat()*3);
 		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
 				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
 	}
@@ -65,7 +63,7 @@ public class Boid {
 		gl.glFrontFace(GL11.GL_CW);
 		gl.glVertexPointer(2, GL11.GL_FLOAT, 0, mFVertexBuffer);
 		gl.glColorPointer(4, GL11.GL_FLOAT, 0, mColorBuffer);
-		gl.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_BYTE,
+		gl.glDrawElements(GL11.GL_TRIANGLES, 3, GL11.GL_UNSIGNED_BYTE,
 				mIndexBuffer);
 		gl.glFrontFace(GL11.GL_CCW);
 	}
