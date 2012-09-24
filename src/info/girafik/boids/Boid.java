@@ -3,7 +3,6 @@ package info.girafik.boids;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.List;
 import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -26,10 +25,10 @@ public class Boid {
 	private static FloatBuffer mFVertexBuffer;
 	private static FloatBuffer mColorBuffer;
 	private static ByteBuffer mIndexBuffer;
-	private static Vector temp = new Vector(0, 0);
-	private static Vector sum = new Vector(0, 0);
-	private static Vector align = new Vector(0, 0);
-	private static Vector separate = new Vector(0, 0);
+	private static Vector temp = new Vector(0, 0, 0);
+	private static Vector sum = new Vector(0, 0, 0);
+	private static Vector align = new Vector(0, 0, 0);
+	private static Vector separate = new Vector(0, 0, 0);
 
 	static {
 		byte indices[] = { 0, 1, 2 };
@@ -58,9 +57,10 @@ public class Boid {
 
 	public Boid() {
 		Random r = new Random();
-		location = new Vector(r.nextFloat() * 3, r.nextFloat() * 3);
+		location = new Vector(r.nextFloat() * 3, r.nextFloat() * 3, r.nextFloat() * 0.3f);
 		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f,
-				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f, (r.nextBoolean() ? 1f : -1f)
+						* r.nextFloat() / 100f);
 	}
 
 	public void draw(GL10 gl) {
@@ -79,16 +79,47 @@ public class Boid {
 	}
 
 	private void rotate(Vector bounds) {
-		if (location.x >= bounds.x) {
-			location.x = -bounds.x;
-		} else if (location.x <= -bounds.x) {
-			location.x = bounds.x;
+		// if (location.x >= bounds.x) {
+		// location.x = -bounds.x;
+		// } else if (location.x <= -bounds.x) {
+		// location.x = bounds.x;
+		// }
+		//
+		// if (location.y >= bounds.y) {
+		// location.y = -bounds.y;
+		// } else if (location.y <= -bounds.y) {
+		// location.y = bounds.y;
+		// }
+
+		// if (location.z >= bounds.z) {
+		// location.z = -bounds.z;
+		// } else if (location.z <= -bounds.z) {
+		// location.z = bounds.z;
+		// }
+		// location.z = 0;
+
+		if (location.x >= bounds.x - 0.1f && velocity.x > 0) {
+			float scale = (bounds.x - location.x);
+			velocity.x *= scale;
+		} else if (location.x <= 0.1f - bounds.x && velocity.x < 0) {
+			float scale = (location.x - bounds.x);
+			velocity.x *= scale;
 		}
 
-		if (location.y >= bounds.y) {
-			location.y = -bounds.y;
-		} else if (location.y <= -bounds.y) {
-			location.y = bounds.y;
+		if (location.y >= bounds.y - 0.1f && velocity.y > 0) {
+			float scale = (bounds.y - location.y);
+			velocity.y *= scale;
+		} else if (location.y <= 0.1f - bounds.y && velocity.y < 0) {
+			float scale = (location.y - bounds.y);
+			velocity.y *= scale;
+		}
+
+		if (location.z >= bounds.z - 0.1f && velocity.z > 0) {
+			float scale = (bounds.z - location.z);
+			velocity.z *= scale;
+		} else if (location.z <= 0.1f - bounds.z && velocity.z < 0) {
+			float scale = (location.z - bounds.z);
+			velocity.z *= scale;
 		}
 
 	}
@@ -135,7 +166,7 @@ public class Boid {
 
 			steer = desired.subtract(velocity).limit(MAX_FORCE);
 		} else {
-			steer = new Vector(0, 0);
+			steer = new Vector(0, 0, 0);
 		}
 		return steer;
 	}

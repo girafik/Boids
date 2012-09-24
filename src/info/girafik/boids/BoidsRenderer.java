@@ -41,7 +41,9 @@ public class BoidsRenderer implements Renderer {
 		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
 		for (Boid boid : boids) {
 			gl.glLoadIdentity();
-			gl.glTranslatef((float) boid.location.x, (float) boid.location.y, -DISTANCE);
+			// gl.glTranslatef(boid.location.x, boid.location.y, -DISTANCE +
+			// boid.location.z);
+			gl.glTranslatef(boid.location.x, boid.location.y, -DISTANCE - 2 + boid.location.z);
 			boid.draw(gl);
 		}
 	}
@@ -61,21 +63,21 @@ public class BoidsRenderer implements Renderer {
 		switch (rotation) {
 		case Surface.ROTATION_0:
 		case Surface.ROTATION_180:
-			DISTANCE = 5f;
+			DISTANCE = 2f;
 			break;
 		case Surface.ROTATION_90:
 		case Surface.ROTATION_270:
-			DISTANCE = 5f / ratio;
+			DISTANCE = 2f / ratio;
 			break;
 		}
 
-		bounds = new Vector(ratio * DISTANCE, 1 * DISTANCE);
+		bounds = new Vector(ratio * DISTANCE, 1 * DISTANCE, 2f);
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
-		boids = new Boid[55];
+		boids = new Boid[100];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
 		}
@@ -84,7 +86,6 @@ public class BoidsRenderer implements Renderer {
 
 		gl.glEnable(GL11.GL_CULL_FACE);
 		gl.glShadeModel(GL11.GL_SMOOTH);
-		// gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		gl.glDisable(GL11.GL_DEPTH_TEST);
 		gl.glEnable(GL11.GL_BLEND);
 	}
