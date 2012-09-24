@@ -24,6 +24,8 @@ public class BoidsRenderer implements Renderer {
 	List<Boid> closeBoids = new ArrayList<Boid>();
 	private Context context;
 	private int rotation = Surface.ROTATION_0;
+	private int width;
+	private int height;
 	private static Vector normalized = new Vector(0, 0, 0);
 
 	public BoidsRenderer(Context context) {
@@ -64,6 +66,8 @@ public class BoidsRenderer implements Renderer {
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
+		this.width = width;
+		this.height = height;
 
 		gl.glViewport(0, 0, width, height);
 
@@ -87,7 +91,7 @@ public class BoidsRenderer implements Renderer {
 			DISTANCE = 5f / ratio;
 			break;
 		}
-		bounds = new Vector(ratio * DISTANCE, 1 * DISTANCE, DISTANCE);
+		bounds = new Vector(ratio * DISTANCE, DISTANCE, DISTANCE);
 	}
 
 	@Override
@@ -105,5 +109,19 @@ public class BoidsRenderer implements Renderer {
 		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
 		gl.glShadeModel(GL10.GL_SMOOTH);
 		gl.glDisable(GL10.GL_DITHER);
+	}
+
+	public void touch(float x, float y) {
+
+		float relx = (x - width / 2f) / width * bounds.x * 2;
+		float rely = (height / 2f - y) / height * bounds.y * 2;
+
+		for (Boid boid : boids) {
+			boid.velocity.x = relx - boid.location.x;
+			boid.velocity.y = rely - boid.location.y;
+			boid.velocity.z = bounds.z - boid.location.z;
+			boid.velocity.copyFrom(normalized.copyFrom(boid.velocity).normalize());
+		}
+
 	}
 }

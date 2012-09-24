@@ -16,6 +16,7 @@
 
 package info.girafik.boids.wallpaper;
 
+import info.girafik.boids.BoidsRenderer;
 import info.girafik.boids.wallpaper.BaseConfigChooser.ComponentSizeChooser;
 import info.girafik.boids.wallpaper.BaseConfigChooser.SimpleEGLConfigChooser;
 
@@ -34,6 +35,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLSurfaceView.Renderer;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 // Original code provided by Robert Green
@@ -56,6 +58,7 @@ public class GLWallpaperService extends WallpaperService {
 		private EGLWindowSurfaceFactory mEGLWindowSurfaceFactory;
 		private GLWrapper mGLWrapper;
 		private int mDebugFlags;
+		private BoidsRenderer renderer;
 
 		public GLEngine() {
 			super();
@@ -85,8 +88,7 @@ public class GLWallpaperService extends WallpaperService {
 		}
 
 		@Override
-		public void onSurfaceChanged(SurfaceHolder holder, int format,
-				int width, int height) {
+		public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 			// Log.d(TAG, "onSurfaceChanged()");
 			mGLThread.onWindowResize(width, height);
 			super.onSurfaceChanged(holder, format, width, height);
@@ -106,6 +108,17 @@ public class GLWallpaperService extends WallpaperService {
 			super.onSurfaceDestroyed(holder);
 		}
 
+		@Override
+		public void onTouchEvent(MotionEvent event) {
+			if (event != null) {
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					if (renderer != null) {
+						queueEvent(new TouchEventRun(event.getX(), event.getY()));
+					}
+				}
+			}
+		}
+
 		/**
 		 * An EGL helper class.
 		 */
@@ -122,6 +135,7 @@ public class GLWallpaperService extends WallpaperService {
 		}
 
 		public void setRenderer(Renderer renderer) {
+			this.renderer = (BoidsRenderer) renderer;
 			checkRenderThreadState();
 			if (mEGLConfigChooser == null) {
 				mEGLConfigChooser = new SimpleEGLConfigChooser(true);
@@ -132,8 +146,8 @@ public class GLWallpaperService extends WallpaperService {
 			if (mEGLWindowSurfaceFactory == null) {
 				mEGLWindowSurfaceFactory = new DefaultWindowSurfaceFactory();
 			}
-			mGLThread = new GLThread(renderer, mEGLConfigChooser,
-					mEGLContextFactory, mEGLWindowSurfaceFactory, mGLWrapper);
+			mGLThread = new GLThread(renderer, mEGLConfigChooser, mEGLContextFactory,
+					mEGLWindowSurfaceFactory, mGLWrapper);
 			mGLThread.start();
 		}
 
@@ -156,10 +170,10 @@ public class GLWallpaperService extends WallpaperService {
 			setEGLConfigChooser(new SimpleEGLConfigChooser(needDepth));
 		}
 
-		public void setEGLConfigChooser(int redSize, int greenSize,
-				int blueSize, int alphaSize, int depthSize, int stencilSize) {
-			setEGLConfigChooser(new ComponentSizeChooser(redSize, greenSize,
-					blueSize, alphaSize, depthSize, stencilSize));
+		public void setEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize,
+				int depthSize, int stencilSize) {
+			setEGLConfigChooser(new ComponentSizeChooser(redSize, greenSize, blueSize, alphaSize,
+					depthSize, stencilSize));
 		}
 
 		public void setRenderMode(int renderMode) {
@@ -191,6 +205,24 @@ public class GLWallpaperService extends WallpaperService {
 				throw new IllegalStateException(
 						"setRenderer has already been called for this instance.");
 			}
+		}
+
+		private class TouchEventRun implements Runnable {
+
+			private final float x;
+			private final float y;
+
+			public TouchEventRun(float x, float y) {
+				this.x = x;
+				this.y = y;
+			}
+
+			@Override
+			public void run() {
+				renderer.touch(x, y);
+
+			}
+
 		}
 	}
 
@@ -234,8 +266,8 @@ class LogWriter extends Writer {
 /**
  * An interface for customizing the eglCreateContext and eglDestroyContext
  * calls.
- * 
- * 
+ *
+ *
  * This interface must be implemented by clients wishing to call
  * {@link GLWallpaperService#setEGLContextFactory(EGLContextFactory)}
  */
@@ -247,10 +279,8 @@ interface EGLContextFactory {
 
 class DefaultContextFactory implements EGLContextFactory {
 
-	public EGLContext createContext(EGL10 egl, EGLDisplay display,
-			EGLConfig config) {
-		return egl
-				.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT, null);
+	public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig config) {
+		return egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT, null);
 	}
 
 	public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context) {
@@ -261,29 +291,28 @@ class DefaultContextFactory implements EGLContextFactory {
 /**
  * An interface for customizing the eglCreateWindowSurface and eglDestroySurface
  * calls.
- * 
- * 
+ *
+ *
  * This interface must be implemented by clients wishing to call
  * {@link GLWallpaperService#setEGLWindowSurfaceFactory(EGLWindowSurfaceFactory)}
  */
 interface EGLWindowSurfaceFactory {
-	EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display,
-			EGLConfig config, Object nativeWindow);
+	EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config,
+			Object nativeWindow);
 
 	void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface);
 }
 
 class DefaultWindowSurfaceFactory implements EGLWindowSurfaceFactory {
 
-	public EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display,
-			EGLConfig config, Object nativeWindow) {
+	public EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config,
+			Object nativeWindow) {
 		// this is a bit of a hack to work around Droid init problems - if you
 		// don't have this, it'll get hung up on orientation changes
 		EGLSurface eglSurface = null;
 		while (eglSurface == null) {
 			try {
-				eglSurface = egl.eglCreateWindowSurface(display, config,
-						nativeWindow, null);
+				eglSurface = egl.eglCreateWindowSurface(display, config, nativeWindow, null);
 			} catch (Throwable t) {
 			} finally {
 				if (eglSurface == null) {
@@ -305,7 +334,7 @@ class DefaultWindowSurfaceFactory implements EGLWindowSurfaceFactory {
 interface GLWrapper {
 	/**
 	 * Wraps a gl interface in another gl interface.
-	 * 
+	 *
 	 * @param gl
 	 *            a GL interface that is to be wrapped.
 	 * @return either the input argument or another GL object that wraps the
@@ -327,8 +356,7 @@ class EglHelper {
 	private EGLWindowSurfaceFactory mEGLWindowSurfaceFactory;
 	private GLWrapper mGLWrapper;
 
-	public EglHelper(EGLConfigChooser chooser,
-			EGLContextFactory contextFactory,
+	public EglHelper(EGLConfigChooser chooser, EGLContextFactory contextFactory,
 			EGLWindowSurfaceFactory surfaceFactory, GLWrapper wrapper) {
 		this.mEGLConfigChooser = chooser;
 		this.mEGLContextFactory = contextFactory;
@@ -338,7 +366,7 @@ class EglHelper {
 
 	/**
 	 * Initialize EGL for a given configuration spec.
-	 * 
+	 *
 	 * @param configSpec
 	 */
 	public void start() {
@@ -381,8 +409,7 @@ class EglHelper {
 			 * Create an OpenGL ES context. This must be done only once, an
 			 * OpenGL context is a somewhat heavy object.
 			 */
-			mEglContext = mEGLContextFactory.createContext(mEgl, mEglDisplay,
-					mEglConfig);
+			mEglContext = mEGLContextFactory.createContext(mEgl, mEglDisplay, mEglConfig);
 			if (mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT) {
 				throw new RuntimeException("createContext failed");
 			}
@@ -406,17 +433,16 @@ class EglHelper {
 			/*
 			 * Unbind and destroy the old EGL surface, if there is one.
 			 */
-			mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE,
-					EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
-			mEGLWindowSurfaceFactory.destroySurface(mEgl, mEglDisplay,
-					mEglSurface);
+			mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE,
+					EGL10.EGL_NO_CONTEXT);
+			mEGLWindowSurfaceFactory.destroySurface(mEgl, mEglDisplay, mEglSurface);
 		}
 
 		/*
 		 * Create an EGL surface we can render into.
 		 */
-		mEglSurface = mEGLWindowSurfaceFactory.createWindowSurface(mEgl,
-				mEglDisplay, mEglConfig, holder);
+		mEglSurface = mEGLWindowSurfaceFactory.createWindowSurface(mEgl, mEglDisplay, mEglConfig,
+				holder);
 
 		if (mEglSurface == null || mEglSurface == EGL10.EGL_NO_SURFACE) {
 			throw new RuntimeException("createWindowSurface failed");
@@ -426,8 +452,7 @@ class EglHelper {
 		 * Before we can issue GL commands, we need to make sure the context is
 		 * current and bound to a surface.
 		 */
-		if (!mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface,
-				mEglContext)) {
+		if (!mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext)) {
 			throw new RuntimeException("eglMakeCurrent failed.");
 		}
 
@@ -449,7 +474,7 @@ class EglHelper {
 
 	/**
 	 * Display the current render surface.
-	 * 
+	 *
 	 * @return false if the context has been lost.
 	 */
 	public boolean swap() {
@@ -465,10 +490,9 @@ class EglHelper {
 
 	public void destroySurface() {
 		if (mEglSurface != null && mEglSurface != EGL10.EGL_NO_SURFACE) {
-			mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE,
-					EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
-			mEGLWindowSurfaceFactory.destroySurface(mEgl, mEglDisplay,
-					mEglSurface);
+			mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE,
+					EGL10.EGL_NO_CONTEXT);
+			mEGLWindowSurfaceFactory.destroySurface(mEgl, mEglDisplay, mEglSurface);
 			mEglSurface = null;
 		}
 	}
@@ -519,8 +543,7 @@ class GLThread extends Thread {
 	private ArrayList<Runnable> mEventQueue = new ArrayList<Runnable>();
 	private EglHelper mEglHelper;
 
-	GLThread(Renderer renderer, EGLConfigChooser chooser,
-			EGLContextFactory contextFactory,
+	GLThread(Renderer renderer, EGLConfigChooser chooser, EGLContextFactory contextFactory,
 			EGLWindowSurfaceFactory surfaceFactory, GLWrapper wrapper) {
 		super();
 		mDone = false;
@@ -564,8 +587,8 @@ class GLThread extends Thread {
 	}
 
 	private void guardedRun() throws InterruptedException {
-		mEglHelper = new EglHelper(mEGLConfigChooser, mEGLContextFactory,
-				mEGLWindowSurfaceFactory, mGLWrapper);
+		mEglHelper = new EglHelper(mEGLConfigChooser, mEGLContextFactory, mEGLWindowSurfaceFactory,
+				mGLWrapper);
 		try {
 			GL10 gl = null;
 			boolean tellRendererSurfaceCreated = true;
@@ -805,7 +828,7 @@ class GLThread extends Thread {
 
 	/**
 	 * Queue an "event" to be run on the GL rendering thread.
-	 * 
+	 *
 	 * @param r
 	 *            the runnable to be run on the GL rendering thread.
 	 */
@@ -845,7 +868,7 @@ class GLThread extends Thread {
 		/*
 		 * Tries once to acquire the right to use an EGL surface. Does not
 		 * block.
-		 * 
+		 *
 		 * @return true if the right to use an EGL surface was acquired.
 		 */
 		public synchronized boolean tryAcquireEglSurface(GLThread thread) {
@@ -886,8 +909,7 @@ abstract class BaseConfigChooser implements EGLConfigChooser {
 		}
 
 		EGLConfig[] configs = new EGLConfig[numConfigs];
-		egl.eglChooseConfig(display, mConfigSpec, configs, numConfigs,
-				num_config);
+		egl.eglChooseConfig(display, mConfigSpec, configs, numConfigs, num_config);
 		EGLConfig config = chooseConfig(egl, display, configs);
 		if (config == null) {
 			throw new IllegalArgumentException("No config chosen");
@@ -895,19 +917,17 @@ abstract class BaseConfigChooser implements EGLConfigChooser {
 		return config;
 	}
 
-	abstract EGLConfig chooseConfig(EGL10 egl, EGLDisplay display,
-			EGLConfig[] configs);
+	abstract EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs);
 
 	protected int[] mConfigSpec;
 
 	public static class ComponentSizeChooser extends BaseConfigChooser {
-		public ComponentSizeChooser(int redSize, int greenSize, int blueSize,
-				int alphaSize, int depthSize, int stencilSize) {
-			super(new int[] { EGL10.EGL_RED_SIZE, redSize,
-					EGL10.EGL_GREEN_SIZE, greenSize, EGL10.EGL_BLUE_SIZE,
-					blueSize, EGL10.EGL_ALPHA_SIZE, alphaSize,
-					EGL10.EGL_DEPTH_SIZE, depthSize, EGL10.EGL_STENCIL_SIZE,
-					stencilSize, EGL10.EGL_NONE });
+		public ComponentSizeChooser(int redSize, int greenSize, int blueSize, int alphaSize,
+				int depthSize, int stencilSize) {
+			super(new int[] { EGL10.EGL_RED_SIZE, redSize, EGL10.EGL_GREEN_SIZE, greenSize,
+					EGL10.EGL_BLUE_SIZE, blueSize, EGL10.EGL_ALPHA_SIZE, alphaSize,
+					EGL10.EGL_DEPTH_SIZE, depthSize, EGL10.EGL_STENCIL_SIZE, stencilSize,
+					EGL10.EGL_NONE });
 			mValue = new int[1];
 			mRedSize = redSize;
 			mGreenSize = greenSize;
@@ -918,28 +938,19 @@ abstract class BaseConfigChooser implements EGLConfigChooser {
 		}
 
 		@Override
-		public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display,
-				EGLConfig[] configs) {
+		public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
 			EGLConfig closestConfig = null;
 			int closestDistance = 1000;
 			for (EGLConfig config : configs) {
-				int d = findConfigAttrib(egl, display, config,
-						EGL10.EGL_DEPTH_SIZE, 0);
-				int s = findConfigAttrib(egl, display, config,
-						EGL10.EGL_STENCIL_SIZE, 0);
+				int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
+				int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
 				if (d >= mDepthSize && s >= mStencilSize) {
-					int r = findConfigAttrib(egl, display, config,
-							EGL10.EGL_RED_SIZE, 0);
-					int g = findConfigAttrib(egl, display, config,
-							EGL10.EGL_GREEN_SIZE, 0);
-					int b = findConfigAttrib(egl, display, config,
-							EGL10.EGL_BLUE_SIZE, 0);
-					int a = findConfigAttrib(egl, display, config,
-							EGL10.EGL_ALPHA_SIZE, 0);
-					int distance = Math.abs(r - mRedSize)
-							+ Math.abs(g - mGreenSize)
-							+ Math.abs(b - mBlueSize)
-							+ Math.abs(a - mAlphaSize);
+					int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
+					int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
+					int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
+					int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
+					int distance = Math.abs(r - mRedSize) + Math.abs(g - mGreenSize)
+							+ Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize);
 					if (distance < closestDistance) {
 						closestDistance = distance;
 						closestConfig = config;
@@ -949,8 +960,8 @@ abstract class BaseConfigChooser implements EGLConfigChooser {
 			return closestConfig;
 		}
 
-		private int findConfigAttrib(EGL10 egl, EGLDisplay display,
-				EGLConfig config, int attribute, int defaultValue) {
+		private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config,
+				int attribute, int defaultValue) {
 
 			if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
 				return mValue[0];
@@ -971,7 +982,7 @@ abstract class BaseConfigChooser implements EGLConfigChooser {
 	/**
 	 * This class will choose a supported surface as close to RGB565 as
 	 * possible, with or without a depth buffer.
-	 * 
+	 *
 	 */
 	public static class SimpleEGLConfigChooser extends ComponentSizeChooser {
 		public SimpleEGLConfigChooser(boolean withDepthBuffer) {
@@ -983,4 +994,5 @@ abstract class BaseConfigChooser implements EGLConfigChooser {
 			mBlueSize = 5;
 		}
 	}
+
 }

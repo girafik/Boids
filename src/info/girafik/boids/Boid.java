@@ -10,12 +10,12 @@ import javax.microedition.khronos.opengles.GL10;
 public class Boid {
 
 	static float side = 0.05f;
-	private static final float MAX_VELOCITY = 0.01f;
+	private static final float MAX_VELOCITY = 0.03f;
 	private static final float DESIRED_SEPARATION = 0.1f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
-	private static final float ALIGNMENT_WEIGHT = 0.2f;
-	private static final float COHESION_WEIGHT = 0.2f;
-	private static final float MAX_FORCE = 0.001f;
+	private static final float ALIGNMENT_WEIGHT = 0.3f;
+	private static final float COHESION_WEIGHT = 0.3f;
+	private static final float MAX_FORCE = 0.005f;
 	private static final float INERTION = 0.001f;
 
 	Vector location;
@@ -48,7 +48,7 @@ public class Boid {
 				0.0f, 0.0f, 1.0f, 1.0f, // blue
 				0.0f, 0.0f, 1.0f, 1.0f, // blue
 				0.0f, 0.0f, 1.0f, 1.0f, // blue
-				1.0f, 1.0f, 0.0f, 1.0f}; // yellow
+				1.0f, 1.0f, 0.0f, 1.0f }; // yellow
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
@@ -69,7 +69,9 @@ public class Boid {
 
 	public Boid() {
 		Random r = new Random();
-		location = new Vector(r.nextFloat() * 3, r.nextFloat() * 3, r.nextFloat() * 0.3f);
+		location = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2,
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2, (r.nextBoolean() ? 1f : -1f)
+						* r.nextFloat() * 0.5f);
 		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f,
 				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f, (r.nextBoolean() ? 1f : -1f)
 						* r.nextFloat() / 100f);
