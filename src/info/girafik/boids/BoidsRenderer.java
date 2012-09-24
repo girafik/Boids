@@ -9,6 +9,8 @@ import javax.microedition.khronos.opengles.GL11;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView.Renderer;
+import android.opengl.GLU;
+import android.util.FloatMath;
 import android.view.Surface;
 import android.view.WindowManager;
 
@@ -22,6 +24,7 @@ public class BoidsRenderer implements Renderer {
 	List<Boid> closeBoids = new ArrayList<Boid>();
 	private Context context;
 	private int rotation = Surface.ROTATION_0;
+	private static Vector normalized = new Vector(0, 0, 0);
 
 	public BoidsRenderer(Context context) {
 		this.context = context;
@@ -36,16 +39,27 @@ public class BoidsRenderer implements Renderer {
 
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		gl.glMatrixMode(GL11.GL_MODELVIEW);
 		gl.glEnableClientState(GL11.GL_VERTEX_ARRAY);
 		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
 		for (Boid boid : boids) {
 			gl.glLoadIdentity();
-			// gl.glTranslatef(boid.location.x, boid.location.y, -DISTANCE +
-			// boid.location.z);
-			gl.glTranslatef(boid.location.x, boid.location.y, -DISTANCE - 2 + boid.location.z);
+			gl.glTranslatef(boid.location.x, boid.location.y, -3.f * DISTANCE + boid.location.z);
+
+			normalized.copyFrom(boid.velocity).normalize();
+
+			float theta = (float) Math.atan2(normalized.y, normalized.x) * 57.3f;
+
+			float fi = (float) Math.acos(normalized.z
+					/ FloatMath.sqrt(normalized.x * normalized.x + normalized.y * normalized.y
+							+ normalized.z * normalized.z)) * 57.3f;
+
+			gl.glRotatef(-90f, 0f, 0f, 1f);
+			gl.glRotatef(theta, 0f, 0f, 1f);
+			gl.glRotatef(fi, 0f, 1f, 0f);
+
 			boid.draw(gl);
 		}
+
 	}
 
 	@Override
@@ -56,22 +70,24 @@ public class BoidsRenderer implements Renderer {
 		gl.glMatrixMode(GL11.GL_PROJECTION);
 		gl.glLoadIdentity();
 		ratio = (float) width / height;
-		gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+		GLU.gluPerspective(gl, 45, ratio, .1f, 100.f);
+
+		gl.glMatrixMode(GL11.GL_MODELVIEW);
+		gl.glLoadIdentity();
 
 		rotation = ((WindowManager) context.getApplicationContext().getSystemService(
 				Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
 		switch (rotation) {
 		case Surface.ROTATION_0:
 		case Surface.ROTATION_180:
-			DISTANCE = 2f;
+			DISTANCE = 5f;
 			break;
 		case Surface.ROTATION_90:
 		case Surface.ROTATION_270:
-			DISTANCE = 2f / ratio;
+			DISTANCE = 5f / ratio;
 			break;
 		}
-
-		bounds = new Vector(ratio * DISTANCE, 1 * DISTANCE, 2f);
+		bounds = new Vector(ratio * DISTANCE, 1 * DISTANCE, DISTANCE);
 	}
 
 	@Override
@@ -81,12 +97,13 @@ public class BoidsRenderer implements Renderer {
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
 		}
-		gl.glDisable(GL11.GL_DITHER);
-		gl.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_FASTEST);
 
-		gl.glEnable(GL11.GL_CULL_FACE);
-		gl.glShadeModel(GL11.GL_SMOOTH);
-		gl.glDisable(GL11.GL_DEPTH_TEST);
-		gl.glEnable(GL11.GL_BLEND);
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		gl.glClearDepthf(1.0f);
+		gl.glEnable(GL10.GL_DEPTH_TEST);
+		gl.glDepthFunc(GL10.GL_LEQUAL);
+		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
+		gl.glShadeModel(GL10.GL_SMOOTH);
+		gl.glDisable(GL10.GL_DITHER);
 	}
 }

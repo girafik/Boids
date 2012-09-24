@@ -6,11 +6,10 @@ import java.nio.FloatBuffer;
 import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
-import javax.microedition.khronos.opengles.GL11;
 
 public class Boid {
 
-	static float side = 0.02f;
+	static float side = 0.05f;
 	private static final float MAX_VELOCITY = 0.01f;
 	private static final float DESIRED_SEPARATION = 0.1f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
@@ -31,12 +30,25 @@ public class Boid {
 	private static Vector separate = new Vector(0, 0, 0);
 
 	static {
-		byte indices[] = { 0, 1, 2 };
-		float[] vertices = { 0f, side, 0f, -side, -side, 0f, side, -side, 0f };
-		float colors[] = { 0.8f, 0.8f, 0.2f, 1.0f, //
-				0.8f, 0.8f, 0.2f, 1.0f,//
-				0.8f, 0.8f, 0.2f, 1.0f,//
+		byte indices[] = { // Vertex indices of the 4 Triangles
+		2, 4, 3, // front face (CCW)
+				1, 4, 2, // right face
+				0, 4, 1, // back face
+				4, 0, 3 // left face
 		};
+		float[] vertices = { -side / 2f, -side, -side / 2f, // 0.
+															// left-bottom-back
+				side / 2f, -side, -side / 2f, // 1. right-bottom-back
+				side / 2f, -side, side / 2f, // 2. right-bottom-front
+				-side / 2f, -side, side / 2f, // 3. left-bottom-front
+				0.0f, side, 0.0f // 4. top
+		};
+
+		float colors[] = { 0.0f, 0.0f, 1.0f, 1.0f, // blue
+				0.0f, 0.0f, 1.0f, 1.0f, // blue
+				0.0f, 0.0f, 1.0f, 1.0f, // blue
+				0.0f, 0.0f, 1.0f, 1.0f, // blue
+				1.0f, 1.0f, 0.0f, 1.0f}; // yellow
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
@@ -64,40 +76,26 @@ public class Boid {
 	}
 
 	public void draw(GL10 gl) {
-		gl.glFrontFace(GL11.GL_CW);
-		gl.glVertexPointer(2, GL11.GL_FLOAT, 0, mFVertexBuffer);
-		gl.glColorPointer(4, GL11.GL_FLOAT, 0, mColorBuffer);
-		gl.glDrawElements(GL11.GL_TRIANGLES, 3, GL11.GL_UNSIGNED_BYTE, mIndexBuffer);
-		gl.glFrontFace(GL11.GL_CCW);
+
+		gl.glFrontFace(GL10.GL_CCW);
+		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mFVertexBuffer);
+		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+		gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuffer);
+		gl.glDrawElements(GL10.GL_TRIANGLES, 12, GL10.GL_UNSIGNED_BYTE, mIndexBuffer);
+		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+		gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+		gl.glFrontFace(GL10.GL_CW);
 	}
 
 	public void step(Boid[] boids, Vector bounds) {
 		Vector acceleration = flock(boids, bounds);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
-		location.add(velocity);
 		rotate(bounds);
+		location.add(velocity);
 	}
 
 	private void rotate(Vector bounds) {
-		// if (location.x >= bounds.x) {
-		// location.x = -bounds.x;
-		// } else if (location.x <= -bounds.x) {
-		// location.x = bounds.x;
-		// }
-		//
-		// if (location.y >= bounds.y) {
-		// location.y = -bounds.y;
-		// } else if (location.y <= -bounds.y) {
-		// location.y = bounds.y;
-		// }
-
-		// if (location.z >= bounds.z) {
-		// location.z = -bounds.z;
-		// } else if (location.z <= -bounds.z) {
-		// location.z = bounds.z;
-		// }
-		// location.z = 0;
-
 		if (location.x >= bounds.x - 0.1f && velocity.x > 0) {
 			float scale = (bounds.x - location.x);
 			velocity.x *= scale;
