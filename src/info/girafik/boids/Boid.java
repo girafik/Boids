@@ -26,6 +26,10 @@ public class Boid {
 	private static FloatBuffer mFVertexBuffer;
 	private static FloatBuffer mColorBuffer;
 	private static ByteBuffer mIndexBuffer;
+	private static Vector temp = new Vector(0, 0);
+	private static Vector sum = new Vector(0, 0);
+	private static Vector align = new Vector(0, 0);
+	private static Vector separate = new Vector(0, 0);
 
 	static {
 		byte indices[] = { 0, 1, 2 };
@@ -54,22 +58,21 @@ public class Boid {
 
 	public Boid() {
 		Random r = new Random();
-		location = new Vector(r.nextFloat()*3, r.nextFloat()*3);
-		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
-				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
+		location = new Vector(r.nextFloat() * 3, r.nextFloat() * 3);
+		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f,
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
 	}
 
 	public void draw(GL10 gl) {
 		gl.glFrontFace(GL11.GL_CW);
 		gl.glVertexPointer(2, GL11.GL_FLOAT, 0, mFVertexBuffer);
 		gl.glColorPointer(4, GL11.GL_FLOAT, 0, mColorBuffer);
-		gl.glDrawElements(GL11.GL_TRIANGLES, 3, GL11.GL_UNSIGNED_BYTE,
-				mIndexBuffer);
+		gl.glDrawElements(GL11.GL_TRIANGLES, 3, GL11.GL_UNSIGNED_BYTE, mIndexBuffer);
 		gl.glFrontFace(GL11.GL_CCW);
 	}
 
-	public void step(List<Boid> closeBoids, Vector bounds) {
-		Vector acceleration = flock(closeBoids, bounds);
+	public void step(Boid[] boids, Vector bounds) {
+		Vector acceleration = flock(boids, bounds);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
 		location.add(velocity);
 		rotate(bounds);
@@ -90,27 +93,30 @@ public class Boid {
 
 	}
 
-	private Vector flock(List<Boid> closeBoids, Vector bounds) {
-		Vector separation = separate(closeBoids, bounds).multiply(
-				SEPARATION_WEIGHT);
-		Vector alignment = align(closeBoids).multiply(ALIGNMENT_WEIGHT);
-		Vector cohesion = cohere(closeBoids, bounds).multiply(COHESION_WEIGHT);
+	private Vector flock(Boid[] boids, Vector bounds) {
+		Vector separation = separate(boids, bounds).multiply(SEPARATION_WEIGHT);
+		Vector alignment = align(boids).multiply(ALIGNMENT_WEIGHT);
+		Vector cohesion = cohere(boids, bounds).multiply(COHESION_WEIGHT);
 		return separation.add(alignment).add(cohesion);
 	}
 
 	/*
 	 * Move to center of the neighbors
 	 */
-	private Vector cohere(List<Boid> closeBoids, Vector bounds) {
-		Vector sum = new Vector(0, 0);
-		for (Boid boid : closeBoids) {
-			sum.add(boid.location);
+	private Vector cohere(Boid[] boids, Vector bounds) {
+		sum.init();
+		int closeCount = 0;
+		for (Boid boid : boids) {
+			if (location.distanceTo(boid.location) < BoidsRenderer.RADIUS) {
+				closeCount++;
+				sum.add(boid.location);
+			}
 		}
 
-		if (closeBoids.size() == 0)
+		if (closeCount == 0)
 			return sum;
 
-		return steerTo(sum.divide(closeBoids.size()));
+		return steerTo(sum.divide(closeCount));
 	}
 
 	private Vector steerTo(Vector target) {
@@ -134,32 +140,35 @@ public class Boid {
 		return steer;
 	}
 
-	private Vector align(List<Boid> closeBoids) {
-		Vector mean = new Vector(0, 0);
-		for (Boid boid : closeBoids) {
-			mean.add(boid.velocity);
+	private Vector align(Boid[] boids) {
+		align.init();
+		int closeCount = 0;
+		for (Boid boid : boids) {
+			if (location.distanceTo(boid.location) < BoidsRenderer.RADIUS) {
+				closeCount++;
+				align.add(boid.velocity);
+			}
 		}
-		if (closeBoids.size() != 0) {
-			mean.divide(closeBoids.size());
+		if (closeCount != 0) {
+			align.divide(closeCount);
 		}
-		return mean.limit(MAX_FORCE);
+		return align.limit(MAX_FORCE);
 	}
 
-	private Vector separate(List<Boid> closeBoids, Vector bounds) {
-		Vector mean = new Vector(0, 0);
+	private Vector separate(Boid[] boids, Vector bounds) {
+		separate.init();
 		int count = 0;
-		for (Boid boid : closeBoids) {
+		for (Boid boid : boids) {
 			float d = location.distanceTo(boid.location);
 			if (d > 0 && d < DESIRED_SEPARATION) {
-				mean.add(location.copy().subtract(boid.location).normalize()
-						.divide(d));
+				separate.add(temp.copyFrom(location).subtract(boid.location).normalize().divide(d));
 				count++;
 			}
 		}
 		if (count != 0) {
-			mean.divide(count);
+			separate.divide(count);
 		}
-		return mean;
+		return separate;
 	}
 
 }

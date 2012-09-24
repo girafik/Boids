@@ -9,13 +9,12 @@ import javax.microedition.khronos.opengles.GL11;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView.Renderer;
-import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
 
 public class BoidsRenderer implements Renderer {
 
-	private static final double RADIUS = 0.5;
+	static final double RADIUS = 0.5;
 	private static float DISTANCE;
 	Boid boids[];
 	Vector bounds;
@@ -32,14 +31,7 @@ public class BoidsRenderer implements Renderer {
 	public void onDrawFrame(GL10 gl) {
 
 		for (Boid boid : boids) {
-			closeBoids.clear();
-			for (Boid otherBoid : boids) {
-				if (otherBoid != boid
-						&& boid.location.distanceTo(otherBoid.location) < RADIUS) {
-					closeBoids.add(otherBoid);
-				}
-			}
-			boid.step(closeBoids, bounds);
+			boid.step(boids, bounds);
 		}
 
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -49,8 +41,7 @@ public class BoidsRenderer implements Renderer {
 		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
 		for (Boid boid : boids) {
 			gl.glLoadIdentity();
-			gl.glTranslatef((float) boid.location.x, (float) boid.location.y,
-					-DISTANCE);
+			gl.glTranslatef((float) boid.location.x, (float) boid.location.y, -DISTANCE);
 			boid.draw(gl);
 		}
 	}
@@ -65,9 +56,8 @@ public class BoidsRenderer implements Renderer {
 		ratio = (float) width / height;
 		gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
 
-		rotation = ((WindowManager) context.getApplicationContext()
-				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
-				.getRotation();
+		rotation = ((WindowManager) context.getApplicationContext().getSystemService(
+				Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
 		switch (rotation) {
 		case Surface.ROTATION_0:
 		case Surface.ROTATION_180:
