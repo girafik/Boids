@@ -9,7 +9,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class Boid {
 
-	static float side = 0.05f;
+	static float side = 0.015f;
 	private static final float MAX_VELOCITY = 0.03f;
 	private static final float DESIRED_SEPARATION = 0.1f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
@@ -25,26 +25,28 @@ public class Boid {
 	private static Vector align = new Vector(0, 0, 0);
 	private static Vector separate = new Vector(0, 0, 0);
 
-	static {
+	public static void initModel(float size) {
+		Boid.side = size;
+
 		byte indices[] = { // Vertex indices of the 4 Triangles
 		2, 4, 3, // front face (CCW)
 				1, 4, 2, // right face
 				0, 4, 1, // back face
 				4, 0, 3 // left face
 		};
-		float[] vertices = { -side / 2f, -side, -side / 2f, // 0.
+		float[] vertices = { -side / 3f, -side, -side / 3f, // 0.
 															// left-bottom-back
-				side / 2f, -side, -side / 2f, // 1. right-bottom-back
-				side / 2f, -side, side / 2f, // 2. right-bottom-front
-				-side / 2f, -side, side / 2f, // 3. left-bottom-front
+				side / 3f, -side, -side / 3f, // 1. right-bottom-back
+				side / 3f, -side, side / 3f, // 2. right-bottom-front
+				-side / 3f, -side, side / 3f, // 3. left-bottom-front
 				0.0f, side, 0.0f // 4. top
 		};
 
-		float colors[] = { 0.0f, 0.0f, 1.0f, 1.0f, // blue
-				0.0f, 0.0f, 1.0f, 1.0f, // blue
-				0.0f, 0.0f, 1.0f, 1.0f, // blue
-				0.0f, 0.0f, 1.0f, 1.0f, // blue
-				1.0f, 1.0f, 0.0f, 1.0f }; // yellow
+		float colors[] = { 0f, 0.6f, 0.8f, 1.0f, // blue
+				0f, 0.6f, 0.8f, 1.0f, // blue
+				0f, 0.6f, 0.8f, 1.0f, // blue
+				0f, 0.6f, 0.8f, 1.0f, // blue
+				0.172f, 0.611f, 0.773f, 1.0f }; // not yellow
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());

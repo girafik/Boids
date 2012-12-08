@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <ListPreference
+        android:defaultValue="150"
+        android:entries="@array/count"
+        android:entryValues="@array/countValues"
+        android:key="count"
+        android:summary="Deffine how may boids will be shown"
+        android:title="Boids Number" />
+    <ListPreference
+        android:defaultValue="0.05"
+        android:entries="@array/size"
+        android:entryValues="@array/sizeValues"
+        android:key="size"
+        android:summary="Deffine boid size"
+        android:title="Boid size" />
+
+</PreferenceScreen>

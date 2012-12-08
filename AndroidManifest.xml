@@ -30,6 +30,13 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/wallpaper" />
         </service>
+
+        <activity
+            android:name=".wallpaper.WallpaperSettings"
+            android:exported="true"
+            android:label="@string/boids_wallpaper"
+            android:permission="android.permission.BIND_WALLPAPER" >
+        </activity>
     </application>
 
 </manifest>

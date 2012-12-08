@@ -5,8 +5,10 @@ import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
+import android.preference.PreferenceManager;
 import android.util.FloatMath;
 import android.view.Surface;
 import android.view.WindowManager;
@@ -103,7 +105,7 @@ public class BoidsRenderer implements Renderer {
 		gl.glMatrixMode(GL11.GL_PROJECTION);
 		gl.glLoadIdentity();
 		float ratio = (float) width / height;
-		GLU.gluPerspective(gl, 45, ratio, .1f, 15.f);
+		GLU.gluPerspective(gl, 45, ratio, 5f, 15.f);
 
 		gl.glMatrixMode(GL11.GL_MODELVIEW);
 		gl.glLoadIdentity();
@@ -118,7 +120,7 @@ public class BoidsRenderer implements Renderer {
 			break;
 		case Surface.ROTATION_90:
 		case Surface.ROTATION_270:
-			DISTANCE = 5f / ratio;
+			DISTANCE = 8f / ratio;
 			break;
 		}
 		bounds = new Vector(ratio * DISTANCE, DISTANCE, RADIUS);
@@ -126,8 +128,14 @@ public class BoidsRenderer implements Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		SharedPreferences sp = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		float size = Float.parseFloat(sp.getString("size", "0.05"));
+		int count = Integer.parseInt(sp.getString("count", "150"));
 
-		boids = new Boid[200];
+		Boid.initModel(size);
+
+		boids = new Boid[count];
 		newBoids = new Boid[boids.length];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
