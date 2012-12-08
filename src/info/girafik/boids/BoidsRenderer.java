@@ -1,8 +1,5 @@
 package info.girafik.boids;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
@@ -16,17 +13,20 @@ import android.view.WindowManager;
 
 public class BoidsRenderer implements Renderer {
 
-	static final double RADIUS = 0.5;
+	private static final int NEIGHBOURS = 8;
+	static final float RADIUS = 0.5f;
 	private static float DISTANCE;
 	Boid boids[];
+	Boid newBoids[];
 	Vector bounds;
-	float ratio;
-	List<Boid> closeBoids = new ArrayList<Boid>();
 	private Context context;
 	private int rotation = Surface.ROTATION_0;
 	private int width;
 	private int height;
 	private static Vector normalized = new Vector(0, 0, 0);
+	float[][] distances;
+	private int[][] neigbours;
+	private float[] temp_dists = new float[NEIGHBOURS];
 
 	public BoidsRenderer(Context context) {
 		this.context = context;
@@ -35,8 +35,38 @@ public class BoidsRenderer implements Renderer {
 	@Override
 	public void onDrawFrame(GL10 gl) {
 
-		for (Boid boid : boids) {
-			boid.step(boids, bounds);
+		for (int i = 0; i < boids.length; i++) {
+			Boid current = boids[i];
+			for (int j = i + 1; j < boids.length; j++) {
+				float distance = current.location.distanceTo(boids[j].location);
+				distances[i][j] = distance;
+				distances[j][i] = distance;
+			}
+		}
+
+		for (int i = 0; i < boids.length; i++) {
+			System.arraycopy(distances[i], 0, temp_dists, 0, NEIGHBOURS);
+			for (int j = 0; j < NEIGHBOURS; j++) {
+				neigbours[i][j] = j;
+				temp_dists[j] = distances[i][j];
+			}
+
+			for (int j = NEIGHBOURS; j < boids.length; j++) {
+				for (int k = 0; k < temp_dists.length; k++) {
+					if (temp_dists[k] > distances[i][j]) {
+						temp_dists[k] = distances[i][j];
+						neigbours[i][k] = j;
+						break;
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < boids.length; i++) {
+			newBoids[i].copyFrom(boids[i]);
+		}
+		for (int i = 0; i < boids.length; i++) {
+			boids[i].step(newBoids, bounds, neigbours[i]);
 		}
 
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -45,15 +75,14 @@ public class BoidsRenderer implements Renderer {
 		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
 		for (Boid boid : boids) {
 			gl.glLoadIdentity();
-			gl.glTranslatef(boid.location.x, boid.location.y, -3.f * DISTANCE + boid.location.z);
+			gl.glTranslatef(boid.location.x, boid.location.y, -10f
+					+ boid.location.z);
 
 			normalized.copyFrom(boid.velocity).normalize();
-
 			float theta = (float) Math.atan2(normalized.y, normalized.x) * 57.3f;
-
 			float fi = (float) Math.acos(normalized.z
-					/ FloatMath.sqrt(normalized.x * normalized.x + normalized.y * normalized.y
-							+ normalized.z * normalized.z)) * 57.3f;
+					/ FloatMath.sqrt(normalized.x * normalized.x + normalized.y
+							* normalized.y + normalized.z * normalized.z)) * 57.3f;
 
 			gl.glRotatef(-90f, 0f, 0f, 1f);
 			gl.glRotatef(theta, 0f, 0f, 1f);
@@ -73,14 +102,15 @@ public class BoidsRenderer implements Renderer {
 
 		gl.glMatrixMode(GL11.GL_PROJECTION);
 		gl.glLoadIdentity();
-		ratio = (float) width / height;
-		GLU.gluPerspective(gl, 45, ratio, .1f, 100.f);
+		float ratio = (float) width / height;
+		GLU.gluPerspective(gl, 45, ratio, .1f, 15.f);
 
 		gl.glMatrixMode(GL11.GL_MODELVIEW);
 		gl.glLoadIdentity();
 
-		rotation = ((WindowManager) context.getApplicationContext().getSystemService(
-				Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+		rotation = ((WindowManager) context.getApplicationContext()
+				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
+				.getRotation();
 		switch (rotation) {
 		case Surface.ROTATION_0:
 		case Surface.ROTATION_180:
@@ -91,16 +121,20 @@ public class BoidsRenderer implements Renderer {
 			DISTANCE = 5f / ratio;
 			break;
 		}
-		bounds = new Vector(ratio * DISTANCE, DISTANCE, DISTANCE);
+		bounds = new Vector(ratio * DISTANCE, DISTANCE, RADIUS);
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
-		boids = new Boid[100];
+		boids = new Boid[200];
+		newBoids = new Boid[boids.length];
 		for (int i = 0; i < boids.length; i++) {
 			boids[i] = new Boid();
+			newBoids[i] = new Boid();
 		}
+		distances = new float[boids.length][boids.length];
+		neigbours = new int[boids.length][NEIGHBOURS];
 
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		gl.glClearDepthf(1.0f);
@@ -120,7 +154,8 @@ public class BoidsRenderer implements Renderer {
 			boid.velocity.x = relx - boid.location.x;
 			boid.velocity.y = rely - boid.location.y;
 			boid.velocity.z = bounds.z - boid.location.z;
-			boid.velocity.copyFrom(normalized.copyFrom(boid.velocity).normalize());
+			boid.velocity.copyFrom(normalized.copyFrom(boid.velocity)
+					.normalize());
 		}
 
 	}

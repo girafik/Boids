@@ -17,10 +17,6 @@ public class Boid {
 	private static final float COHESION_WEIGHT = 0.3f;
 	private static final float MAX_FORCE = 0.005f;
 	private static final float INERTION = 0.001f;
-
-	Vector location;
-	Vector velocity;
-
 	private static FloatBuffer mFVertexBuffer;
 	private static FloatBuffer mColorBuffer;
 	private static ByteBuffer mIndexBuffer;
@@ -67,14 +63,17 @@ public class Boid {
 		mIndexBuffer.position(0);
 	}
 
+	Vector location;
+	Vector velocity;
+
 	public Boid() {
 		Random r = new Random();
 		location = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2,
-				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2, (r.nextBoolean() ? 1f : -1f)
-						* r.nextFloat() * 0.5f);
-		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f,
-				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f, (r.nextBoolean() ? 1f : -1f)
-						* r.nextFloat() / 100f);
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2,
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 0.5f);
+		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
+				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f,
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
 	}
 
 	public void draw(GL10 gl) {
@@ -84,14 +83,15 @@ public class Boid {
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mFVertexBuffer);
 		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 		gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuffer);
-		gl.glDrawElements(GL10.GL_TRIANGLES, 12, GL10.GL_UNSIGNED_BYTE, mIndexBuffer);
+		gl.glDrawElements(GL10.GL_TRIANGLES, 12, GL10.GL_UNSIGNED_BYTE,
+				mIndexBuffer);
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 		gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
 		gl.glFrontFace(GL10.GL_CW);
 	}
 
-	public void step(Boid[] boids, Vector bounds) {
-		Vector acceleration = flock(boids, bounds);
+	public void step(Boid[] boids, Vector bounds, int[] neigbours) {
+		Vector acceleration = flock(boids, bounds, neigbours);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
 		rotate(bounds);
 		location.add(velocity);
@@ -124,30 +124,24 @@ public class Boid {
 
 	}
 
-	private Vector flock(Boid[] boids, Vector bounds) {
-		Vector separation = separate(boids, bounds).multiply(SEPARATION_WEIGHT);
-		Vector alignment = align(boids).multiply(ALIGNMENT_WEIGHT);
-		Vector cohesion = cohere(boids, bounds).multiply(COHESION_WEIGHT);
+	private Vector flock(Boid[] boids, Vector bounds, int[] neigbours) {
+		Vector separation = separate(boids, bounds, neigbours).multiply(
+				SEPARATION_WEIGHT);
+		Vector alignment = align(boids, neigbours).multiply(ALIGNMENT_WEIGHT);
+		Vector cohesion = cohere(boids, bounds, neigbours).multiply(
+				COHESION_WEIGHT);
 		return separation.add(alignment).add(cohesion);
 	}
 
 	/*
 	 * Move to center of the neighbors
 	 */
-	private Vector cohere(Boid[] boids, Vector bounds) {
+	private Vector cohere(Boid[] boids, Vector bounds, int[] neigbours) {
 		sum.init();
-		int closeCount = 0;
-		for (Boid boid : boids) {
-			if (location.distanceTo(boid.location) < BoidsRenderer.RADIUS) {
-				closeCount++;
-				sum.add(boid.location);
-			}
+		for (int n : neigbours) {
+			sum.add(boids[n].location);
 		}
-
-		if (closeCount == 0)
-			return sum;
-
-		return steerTo(sum.divide(closeCount));
+		return steerTo(sum.divide(neigbours.length));
 	}
 
 	private Vector steerTo(Vector target) {
@@ -171,28 +165,24 @@ public class Boid {
 		return steer;
 	}
 
-	private Vector align(Boid[] boids) {
+	private Vector align(Boid[] boids, int[] neigbours) {
 		align.init();
-		int closeCount = 0;
-		for (Boid boid : boids) {
-			if (location.distanceTo(boid.location) < BoidsRenderer.RADIUS) {
-				closeCount++;
-				align.add(boid.velocity);
-			}
+		for (int n : neigbours) {
+			align.add(boids[n].velocity);
 		}
-		if (closeCount != 0) {
-			align.divide(closeCount);
-		}
+		align.divide(neigbours.length);
 		return align.limit(MAX_FORCE);
 	}
 
-	private Vector separate(Boid[] boids, Vector bounds) {
+	private Vector separate(Boid[] boids, Vector bounds, int[] neigbours) {
 		separate.init();
 		int count = 0;
-		for (Boid boid : boids) {
+		for (int n : neigbours) {
+			Boid boid = boids[n];
 			float d = location.distanceTo(boid.location);
 			if (d > 0 && d < DESIRED_SEPARATION) {
-				separate.add(temp.copyFrom(location).subtract(boid.location).normalize().divide(d));
+				separate.add(temp.copyFrom(location).subtract(boid.location)
+						.normalize().divide(d));
 				count++;
 			}
 		}
@@ -200,6 +190,11 @@ public class Boid {
 			separate.divide(count);
 		}
 		return separate;
+	}
+
+	public void copyFrom(Boid boid) {
+		this.location.copyFrom(boid.location);
+		this.velocity.copyFrom(boid.velocity);
 	}
 
 }
