@@ -17,6 +17,7 @@ public class Boid {
 	private static final float COHESION_WEIGHT = 0.3f;
 	private static final float MAX_FORCE = 0.005f;
 	private static final float INERTION = 0.001f;
+	private static final float CENTRIC_POWER = 0.5f; // > 0 more power
 	private static FloatBuffer mFVertexBuffer;
 	private static FloatBuffer mColorBuffer;
 	private static ByteBuffer mIndexBuffer;
@@ -95,35 +96,7 @@ public class Boid {
 	public void step(Boid[] boids, Vector bounds, int[] neigbours) {
 		Vector acceleration = flock(boids, bounds, neigbours);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
-		rotate(bounds);
 		location.add(velocity);
-	}
-
-	private void rotate(Vector bounds) {
-		if (location.x >= bounds.x - 0.1f && velocity.x > 0) {
-			float scale = (bounds.x - location.x);
-			velocity.x *= scale;
-		} else if (location.x <= 0.1f - bounds.x && velocity.x < 0) {
-			float scale = (location.x - bounds.x);
-			velocity.x *= scale;
-		}
-
-		if (location.y >= bounds.y - 0.1f && velocity.y > 0) {
-			float scale = (bounds.y - location.y);
-			velocity.y *= scale;
-		} else if (location.y <= 0.1f - bounds.y && velocity.y < 0) {
-			float scale = (location.y - bounds.y);
-			velocity.y *= scale;
-		}
-
-		if (location.z >= bounds.z - 0.1f && velocity.z > 0) {
-			float scale = (bounds.z - location.z);
-			velocity.z *= scale;
-		} else if (location.z <= 0.1f - bounds.z && velocity.z < 0) {
-			float scale = (location.z - bounds.z);
-			velocity.z *= scale;
-		}
-
 	}
 
 	private Vector flock(Boid[] boids, Vector bounds, int[] neigbours) {
@@ -143,7 +116,8 @@ public class Boid {
 		for (int n : neigbours) {
 			sum.add(boids[n].location);
 		}
-		return steerTo(sum.divide(neigbours.length));
+		sum.z /= 2;
+		return steerTo(sum.divide(neigbours.length + CENTRIC_POWER));
 	}
 
 	private Vector steerTo(Vector target) {

@@ -15,8 +15,8 @@ import android.view.WindowManager;
 
 public class BoidsRenderer implements Renderer {
 
-	private static final int NEIGHBOURS = 8;
-	static final float RADIUS = 0.5f;
+	private static final int NEIGHBOURS = 7;
+	static final float RADIUS = 0.05f;
 	private static float DISTANCE;
 	Boid boids[];
 	Boid newBoids[];
@@ -77,7 +77,7 @@ public class BoidsRenderer implements Renderer {
 		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
 		for (Boid boid : boids) {
 			gl.glLoadIdentity();
-			gl.glTranslatef(boid.location.x, boid.location.y, -10f
+			gl.glTranslatef(boid.location.x, boid.location.y, -11f
 					+ boid.location.z);
 
 			normalized.copyFrom(boid.velocity).normalize();
@@ -123,7 +123,7 @@ public class BoidsRenderer implements Renderer {
 			DISTANCE = 8f / ratio;
 			break;
 		}
-		bounds = new Vector(ratio * DISTANCE, DISTANCE, RADIUS);
+		bounds = new Vector(ratio * DISTANCE * 2, DISTANCE * 2, RADIUS);
 	}
 
 	@Override
