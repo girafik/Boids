@@ -21,7 +21,7 @@ public class Boid {
 	private static FloatBuffer mFVertexBuffer;
 	private static FloatBuffer mColorBuffer;
 	private static ByteBuffer mIndexBuffer;
-	private static Vector temp = new Vector(0, 0, 0);
+	private static Vector tempVector = new Vector(0, 0, 0);
 	private static Vector sum = new Vector(0, 0, 0);
 	private static Vector align = new Vector(0, 0, 0);
 	private static Vector separate = new Vector(0, 0, 0);
@@ -35,19 +35,21 @@ public class Boid {
 				0, 4, 1, // back face
 				4, 0, 3 // left face
 		};
-		float[] vertices = { -side / 3f, -side, -side / 3f, // 0.
-															// left-bottom-back
+		float[] vertices = {//
+		-side / 3f, -side, -side / 3f, // 0. left-bottom-back
 				side / 3f, -side, -side / 3f, // 1. right-bottom-back
 				side / 3f, -side, side / 3f, // 2. right-bottom-front
 				-side / 3f, -side, side / 3f, // 3. left-bottom-front
 				0.0f, side, 0.0f // 4. top
 		};
 
-		float colors[] = { 0f, 0.6f, 0.8f, 1.0f, // blue
+		float colors[] = {//
+		0f, 0.6f, 0.8f, 1.0f, // blue
 				0f, 0.6f, 0.8f, 1.0f, // blue
 				0f, 0.6f, 0.8f, 1.0f, // blue
 				0f, 0.6f, 0.8f, 1.0f, // blue
-				0.172f, 0.611f, 0.773f, 1.0f }; // not yellow
+				0.172f, 0.611f, 0.773f, 1.0f // darker blue
+		};
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
@@ -71,11 +73,13 @@ public class Boid {
 
 	public Boid() {
 		Random r = new Random();
-		location = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2,
-				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2,
+		location = new Vector(//
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2, //
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 2, //
 				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() * 0.5f);
-		velocity = new Vector((r.nextBoolean() ? 1f : -1f) * r.nextFloat()
-				/ 100f, (r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f,
+		velocity = new Vector(//
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f, //
+				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f, //
 				(r.nextBoolean() ? 1f : -1f) * r.nextFloat() / 100f);
 	}
 
@@ -93,25 +97,21 @@ public class Boid {
 		gl.glFrontFace(GL10.GL_CW);
 	}
 
-	public void step(Boid[] boids, Vector bounds, int[] neigbours) {
-		Vector acceleration = flock(boids, bounds, neigbours);
+	public void step(Boid[] boids, int[] neigbours) {
+		Vector acceleration = flock(boids, neigbours);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
 		location.add(velocity);
 	}
 
-	private Vector flock(Boid[] boids, Vector bounds, int[] neigbours) {
-		Vector separation = separate(boids, bounds, neigbours).multiply(
+	private Vector flock(Boid[] boids, int[] neigbours) {
+		Vector separation = separate(boids, neigbours).multiply(
 				SEPARATION_WEIGHT);
 		Vector alignment = align(boids, neigbours).multiply(ALIGNMENT_WEIGHT);
-		Vector cohesion = cohere(boids, bounds, neigbours).multiply(
-				COHESION_WEIGHT);
+		Vector cohesion = cohere(boids, neigbours).multiply(COHESION_WEIGHT);
 		return separation.add(alignment).add(cohesion);
 	}
 
-	/*
-	 * Move to center of the neighbors
-	 */
-	private Vector cohere(Boid[] boids, Vector bounds, int[] neigbours) {
+	private Vector cohere(Boid[] boids, int[] neigbours) {
 		sum.init();
 		for (int n : neigbours) {
 			sum.add(boids[n].location);
@@ -150,15 +150,15 @@ public class Boid {
 		return align.limit(MAX_FORCE);
 	}
 
-	private Vector separate(Boid[] boids, Vector bounds, int[] neigbours) {
+	private Vector separate(Boid[] boids, int[] neigbours) {
 		separate.init();
 		int count = 0;
 		for (int n : neigbours) {
 			Boid boid = boids[n];
-			float d = location.distanceTo(boid.location);
+			float d = tempVector.copyFrom(location).subtract(boid.location)
+					.magnitude();
 			if (d > 0 && d < DESIRED_SEPARATION) {
-				separate.add(temp.copyFrom(location).subtract(boid.location)
-						.normalize().divide(d));
+				separate.add(tempVector.divide(d));
 				count++;
 			}
 		}

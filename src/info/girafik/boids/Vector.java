@@ -30,7 +30,8 @@ public class Vector {
 
 	public Vector limit(float limit) {
 		if (Math.abs(x) > limit || Math.abs(y) > limit || Math.abs(z) > limit) {
-			float scaleFactor = limit / Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z)));
+			float scaleFactor = limit
+					/ Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z)));
 			x *= scaleFactor;
 			y *= scaleFactor;
 			z *= scaleFactor;
@@ -43,11 +44,6 @@ public class Vector {
 		y *= c;
 		z *= c;
 		return this;
-	}
-
-	public float distanceTo(Vector that) {
-		return FloatMath.sqrt((that.x - this.x) * (that.x - this.x) + (that.y - this.y)
-				* (that.y - this.y) + (that.z - this.z) * (that.z - this.z));
 	}
 
 	public Vector divide(float c) {

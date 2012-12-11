@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
 import android.preference.PreferenceManager;
-import android.util.FloatMath;
 import android.view.Surface;
 import android.view.WindowManager;
 
@@ -20,15 +19,15 @@ public class BoidsRenderer implements Renderer {
 	private static float DISTANCE;
 	Boid boids[];
 	Boid newBoids[];
-	Vector bounds;
 	private Context context;
 	private int rotation = Surface.ROTATION_0;
 	private int width;
 	private int height;
-	private static Vector normalized = new Vector(0, 0, 0);
+	private static Vector tempVector = new Vector(0, 0, 0);
 	float[][] distances;
 	private int[][] neigbours;
 	private float[] temp_dists = new float[NEIGHBOURS];
+	private float ratio;
 
 	public BoidsRenderer(Context context) {
 		this.context = context;
@@ -37,10 +36,36 @@ public class BoidsRenderer implements Renderer {
 	@Override
 	public void onDrawFrame(GL10 gl) {
 
+		calculateScene();
+
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		gl.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
+		for (Boid boid : boids) {
+			gl.glLoadIdentity();
+			gl.glTranslatef(boid.location.x, boid.location.y, -DISTANCE
+					+ boid.location.z);
+
+			tempVector.copyFrom(boid.velocity).normalize();
+			float theta = (float) Math.atan2(tempVector.y, tempVector.x) * 57.3f;
+			float fi = (float) Math.acos(tempVector.z / tempVector.magnitude()) * 57.3f;
+
+			gl.glRotatef(-90f, 0f, 0f, 1f);
+			gl.glRotatef(theta, 0f, 0f, 1f);
+			gl.glRotatef(fi, 0f, 1f, 0f);
+
+			boid.draw(gl);
+		}
+
+	}
+
+	private void calculateScene() {
 		for (int i = 0; i < boids.length; i++) {
 			Boid current = boids[i];
 			for (int j = i + 1; j < boids.length; j++) {
-				float distance = current.location.distanceTo(boids[j].location);
+				float distance = tempVector.copyFrom(current.location)
+						.subtract(boids[j].location).magnitude();
 				distances[i][j] = distance;
 				distances[j][i] = distance;
 			}
@@ -50,7 +75,6 @@ public class BoidsRenderer implements Renderer {
 			System.arraycopy(distances[i], 0, temp_dists, 0, NEIGHBOURS);
 			for (int j = 0; j < NEIGHBOURS; j++) {
 				neigbours[i][j] = j;
-				temp_dists[j] = distances[i][j];
 			}
 
 			for (int j = NEIGHBOURS; j < boids.length; j++) {
@@ -68,47 +92,15 @@ public class BoidsRenderer implements Renderer {
 			newBoids[i].copyFrom(boids[i]);
 		}
 		for (int i = 0; i < boids.length; i++) {
-			boids[i].step(newBoids, bounds, neigbours[i]);
+			boids[i].step(newBoids, neigbours[i]);
 		}
-
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		gl.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
-		for (Boid boid : boids) {
-			gl.glLoadIdentity();
-			gl.glTranslatef(boid.location.x, boid.location.y, -11f
-					+ boid.location.z);
-
-			normalized.copyFrom(boid.velocity).normalize();
-			float theta = (float) Math.atan2(normalized.y, normalized.x) * 57.3f;
-			float fi = (float) Math.acos(normalized.z
-					/ FloatMath.sqrt(normalized.x * normalized.x + normalized.y
-							* normalized.y + normalized.z * normalized.z)) * 57.3f;
-
-			gl.glRotatef(-90f, 0f, 0f, 1f);
-			gl.glRotatef(theta, 0f, 0f, 1f);
-			gl.glRotatef(fi, 0f, 1f, 0f);
-
-			boid.draw(gl);
-		}
-
 	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		this.width = width;
 		this.height = height;
-
-		gl.glViewport(0, 0, width, height);
-
-		gl.glMatrixMode(GL11.GL_PROJECTION);
-		gl.glLoadIdentity();
-		float ratio = (float) width / height;
-		GLU.gluPerspective(gl, 45, ratio, 5f, 15.f);
-
-		gl.glMatrixMode(GL11.GL_MODELVIEW);
-		gl.glLoadIdentity();
+		ratio = (float) width / height;
 
 		rotation = ((WindowManager) context.getApplicationContext()
 				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
@@ -116,25 +108,31 @@ public class BoidsRenderer implements Renderer {
 		switch (rotation) {
 		case Surface.ROTATION_0:
 		case Surface.ROTATION_180:
-			DISTANCE = 5f;
+			DISTANCE = 12f;
 			break;
 		case Surface.ROTATION_90:
 		case Surface.ROTATION_270:
-			DISTANCE = 8f / ratio;
+			DISTANCE = 12f / ratio;
 			break;
 		}
-		bounds = new Vector(ratio * DISTANCE * 2, DISTANCE * 2, RADIUS);
+
+		gl.glViewport(0, 0, width, height);
+		gl.glMatrixMode(GL11.GL_PROJECTION);
+		gl.glLoadIdentity();
+		GLU.gluPerspective(gl, 45, ratio, DISTANCE - 5f, DISTANCE + 5f);
+		gl.glMatrixMode(GL11.GL_MODELVIEW);
+		gl.glLoadIdentity();
+
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		SharedPreferences sp = PreferenceManager
 				.getDefaultSharedPreferences(context);
-		float size = Float.parseFloat(sp.getString("size", "0.05"));
-		int count = Integer.parseInt(sp.getString("count", "150"));
-
+		float size = Float.parseFloat(sp.getString("size", "0.04"));
 		Boid.initModel(size);
 
+		int count = Integer.parseInt(sp.getString("count", "150"));
 		boids = new Boid[count];
 		newBoids = new Boid[boids.length];
 		for (int i = 0; i < boids.length; i++) {
@@ -155,14 +153,14 @@ public class BoidsRenderer implements Renderer {
 
 	public void touch(float x, float y) {
 
-		float relx = (x - width / 2f) / width * bounds.x * 2;
-		float rely = (height / 2f - y) / height * bounds.y * 2;
+		float relx = (x - width / 2f) / width * (ratio * DISTANCE);
+		float rely = (height / 2f - y) / height * DISTANCE;
 
 		for (Boid boid : boids) {
 			boid.velocity.x = relx - boid.location.x;
 			boid.velocity.y = rely - boid.location.y;
-			boid.velocity.z = bounds.z - boid.location.z;
-			boid.velocity.copyFrom(normalized.copyFrom(boid.velocity)
+			boid.velocity.z = 0 - boid.location.z;
+			boid.velocity.copyFrom(tempVector.copyFrom(boid.velocity)
 					.normalize());
 		}
 
