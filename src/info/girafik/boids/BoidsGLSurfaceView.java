@@ -21,13 +21,14 @@ public class BoidsGLSurfaceView extends GLSurfaceView {
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event != null) {
-			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			if (event.getAction() == MotionEvent.ACTION_MOVE
+					|| event.getAction() == MotionEvent.ACTION_DOWN) {
 				if (renderer != null) {
 					queueEvent(new TouchEventRun(event.getX(), event.getY()));
 				}
 			}
 		}
-		return super.onTouchEvent(event);
+		return true;
 	}
 
 	private class TouchEventRun implements Runnable {
