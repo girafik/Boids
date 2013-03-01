@@ -11,13 +11,13 @@ public class Boid {
 
 	static float side = 0.015f;
 	private static final float MAX_VELOCITY = 0.03f;
-	private static final float DESIRED_SEPARATION = 0.1f;
+	private static final float DESIRED_SEPARATION = 0.01f;
 	private static final float SEPARATION_WEIGHT = 0.05f;
 	private static final float ALIGNMENT_WEIGHT = 0.3f;
 	private static final float COHESION_WEIGHT = 0.3f;
 	private static final float MAX_FORCE = 0.005f;
 	private static final float INERTION = 0.001f;
-	private static final float CENTRIC_POWER = 0.5f; // > 0 more power
+	private static final float CENTRIC_POWER = 0.8f; // > 0 more power
 	private static FloatBuffer mFVertexBuffer;
 	private static FloatBuffer mColorBuffer;
 	private static ByteBuffer mIndexBuffer;
@@ -97,14 +97,14 @@ public class Boid {
 		gl.glFrontFace(GL10.GL_CW);
 	}
 
-	public void step(Boid[] boids, int[] neigbours) {
-		Vector acceleration = flock(boids, neigbours);
+	public void step(Boid[] boids, int[] neigbours, float[] distances) {
+		Vector acceleration = flock(boids, neigbours, distances);
 		velocity.add(acceleration).limit(MAX_VELOCITY);
 		location.add(velocity);
 	}
 
-	private Vector flock(Boid[] boids, int[] neigbours) {
-		Vector separation = separate(boids, neigbours).multiply(
+	private Vector flock(Boid[] boids, int[] neigbours, float[] distances) {
+		Vector separation = separate(boids, neigbours, distances).multiply(
 				SEPARATION_WEIGHT);
 		Vector alignment = align(boids, neigbours).multiply(ALIGNMENT_WEIGHT);
 		Vector cohesion = cohere(boids, neigbours).multiply(COHESION_WEIGHT);
@@ -150,15 +150,15 @@ public class Boid {
 		return align.limit(MAX_FORCE);
 	}
 
-	private Vector separate(Boid[] boids, int[] neigbours) {
+	private Vector separate(Boid[] boids, int[] neigbours, float[] distances) {
 		separate.init();
 		int count = 0;
 		for (int n : neigbours) {
 			Boid boid = boids[n];
-			float d = tempVector.copyFrom(location).subtract(boid.location)
-					.magnitude();
+			float d = distances[n];
+			tempVector.copyFrom(location).subtract(boid.location);
 			if (d > 0 && d < DESIRED_SEPARATION) {
-				separate.add(tempVector.divide(d));
+				separate.add(tempVector.divide((float) Math.sqrt(d)));
 				count++;
 			}
 		}

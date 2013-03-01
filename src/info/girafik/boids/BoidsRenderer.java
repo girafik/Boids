@@ -65,7 +65,7 @@ public class BoidsRenderer implements Renderer {
 			Boid current = boids[i];
 			for (int j = i + 1; j < boids.length; j++) {
 				float distance = tempVector.copyFrom(current.location)
-						.subtract(boids[j].location).magnitude();
+						.subtract(boids[j].location).magnitude2();
 				distances[i][j] = distance;
 				distances[j][i] = distance;
 			}
@@ -92,7 +92,7 @@ public class BoidsRenderer implements Renderer {
 			newBoids[i].copyFrom(boids[i]);
 		}
 		for (int i = 0; i < boids.length; i++) {
-			boids[i].step(newBoids, neigbours[i]);
+			boids[i].step(newBoids, neigbours[i], distances[i]);
 		}
 	}
 

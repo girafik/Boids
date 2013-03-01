@@ -54,7 +54,11 @@ public class Vector {
 	}
 
 	public float magnitude() {
-		return FloatMath.sqrt(x * x + y * y + z * z);
+		return FloatMath.sqrt(magnitude2());
+	}
+	
+	public float magnitude2() {
+		return x * x + y * y + z * z;
 	}
 
 	public float multiply(Vector that) {

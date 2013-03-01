@@ -13,6 +13,7 @@ public class BoidsActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		BoidsGLSurfaceView glSurfaceView = new BoidsGLSurfaceView(this);
+		glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
 		glSurfaceView.setRenderer(new BoidsRenderer(this));
 		setContentView(glSurfaceView);
 	}
