@@ -6,6 +6,7 @@ import javax.microedition.khronos.opengles.GL11;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
 import android.preference.PreferenceManager;
@@ -28,6 +29,9 @@ public class BoidsRenderer implements Renderer {
 	private int[][] neigbours;
 	private float[] temp_dists = new float[NEIGHBOURS];
 	private float ratio;
+	private float r;
+	private float g;
+	private float b;
 
 	public BoidsRenderer(Context context) {
 		this.context = context;
@@ -38,7 +42,7 @@ public class BoidsRenderer implements Renderer {
 
 		calculateScene();
 
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		gl.glClearColor(r, g, b, 1.0f);
 		gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		gl.glEnableClientState(GL11.GL_VERTEX_ARRAY);
 		gl.glEnableClientState(GL11.GL_COLOR_ARRAY);
@@ -130,7 +134,14 @@ public class BoidsRenderer implements Renderer {
 		SharedPreferences sp = PreferenceManager
 				.getDefaultSharedPreferences(context);
 		float size = Float.parseFloat(sp.getString("size", "0.04"));
-		Boid.initModel(size);
+		int model = sp.getInt("model", 0xff000000);
+
+		Boid.initModel(size, model);
+
+		int backgroud = sp.getInt("background", 0xff000000);
+		r = Color.red(backgroud) / 255f;
+		g = Color.green(backgroud) / 255f;
+		b = Color.blue(backgroud) / 255f;
 
 		int count = Integer.parseInt(sp.getString("count", "150"));
 		boids = new Boid[count];
@@ -142,7 +153,6 @@ public class BoidsRenderer implements Renderer {
 		distances = new float[boids.length][boids.length];
 		neigbours = new int[boids.length][NEIGHBOURS];
 
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		gl.glClearDepthf(1.0f);
 		gl.glEnable(GL10.GL_DEPTH_TEST);
 		gl.glDepthFunc(GL10.GL_LEQUAL);

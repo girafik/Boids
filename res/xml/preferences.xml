@@ -16,4 +16,15 @@
         android:summary="Deffine boid size"
         android:title="Boid size" />
 
+    <net.margaritov.preference.colorpicker.ColorPickerPreference
+        android:defaultValue="@integer/COLOR_BLACK"
+        android:key="background"
+        android:summary="Deffine background color"
+        android:title="Background color" />
+    <net.margaritov.preference.colorpicker.ColorPickerPreference
+        android:defaultValue="@integer/COLOR_BLUE"
+        android:key="model"
+        android:summary="Deffine boid color"
+        android:title="Boid color" />
+
 </PreferenceScreen>

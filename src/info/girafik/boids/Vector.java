@@ -29,9 +29,9 @@ public class Vector {
 	}
 
 	public Vector limit(float limit) {
-		if (Math.abs(x) > limit || Math.abs(y) > limit || Math.abs(z) > limit) {
-			float scaleFactor = limit
-					/ Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z)));
+		float max = Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z)));
+		if (max > limit) {
+			float scaleFactor = limit / max;
 			x *= scaleFactor;
 			y *= scaleFactor;
 			z *= scaleFactor;
@@ -56,7 +56,7 @@ public class Vector {
 	public float magnitude() {
 		return FloatMath.sqrt(magnitude2());
 	}
-	
+
 	public float magnitude2() {
 		return x * x + y * y + z * z;
 	}

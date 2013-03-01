@@ -7,6 +7,8 @@ import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.graphics.Color;
+
 public class Boid {
 
 	static float side = 0.015f;
@@ -26,7 +28,7 @@ public class Boid {
 	private static Vector align = new Vector(0, 0, 0);
 	private static Vector separate = new Vector(0, 0, 0);
 
-	public static void initModel(float size) {
+	public static void initModel(float size, int model) {
 		Boid.side = size;
 
 		byte indices[] = { // Vertex indices of the 4 Triangles
@@ -44,11 +46,11 @@ public class Boid {
 		};
 
 		float colors[] = {//
-		0f, 0.6f, 0.8f, 1.0f, // blue
-				0f, 0.6f, 0.8f, 1.0f, // blue
-				0f, 0.6f, 0.8f, 1.0f, // blue
-				0f, 0.6f, 0.8f, 1.0f, // blue
-				0.172f, 0.611f, 0.773f, 1.0f // darker blue
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
+				(Color.red(model) + 10)/255f, (Color.green(model) + 10)/255f, (Color.blue(model) + 10)/255f, 1.0f // nose
 		};
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
