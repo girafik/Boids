@@ -4,32 +4,32 @@
 
     <com.mnm.seekbarpreference.SeekBarPreference
         android:defaultValue="100"
-        android:dialogTitle="@string/dialog_title"
+        android:dialogTitle="@string/count_title"
         android:key="boidsCount"
         android:persistent="true"
-        android:summary="Deffine how may boids will be shown"
-        android:title="Boids Number"
+        android:summary="@string/count_summary"
+        android:title="@string/count_title"
         seekbar:maxValue="400"
         seekbar:minValue="15" />
     <com.mnm.seekbarpreference.SeekBarPreference
         android:defaultValue="4"
-        android:dialogTitle="@string/dialog_title"
+        android:dialogTitle="@string/size_title"
         android:key="boidsSize"
         android:persistent="true"
-        android:summary="Deffine boids size"
-        android:title="Boids Size"
+        android:summary="@string/size_summary"
+        android:title="@string/size_title"
         seekbar:maxValue="10"
         seekbar:minValue="1" />
 
     <net.margaritov.preference.colorpicker.ColorPickerPreference
         android:defaultValue="@integer/COLOR_BLACK"
         android:key="background"
-        android:summary="Deffine background color"
-        android:title="Background color" />
+        android:summary="@string/background_summary"
+        android:title="@string/background_title" />
     <net.margaritov.preference.colorpicker.ColorPickerPreference
         android:defaultValue="@integer/COLOR_BLUE"
         android:key="model"
-        android:summary="Deffine boid color"
-        android:title="Boid color" />
+        android:summary="@string/model_summary"
+        android:title="@string/model_title" />
 
 </PreferenceScreen>
