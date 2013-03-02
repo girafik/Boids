@@ -4,7 +4,7 @@
     <string name="count_title">Кількість Боідів</string>
     <string name="background_summary">Виберіть колір фону</string>
     <string name="background_title">Колір фону</string>
-    <string name="boids_wallpaper">Обоі Боіди	</string>
+    <string name="boids_wallpaper">Боіди	</string>
     <string name="model_title">Колір Боіду</string>
     <string name="size_title">Розмір Боіду</string>
     <string name="count_summary">Вкажість кількість Боідів</string>
