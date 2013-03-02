@@ -134,7 +134,7 @@ public class BoidsRenderer implements Renderer {
 		SharedPreferences sp = PreferenceManager
 				.getDefaultSharedPreferences(context);
 		float size = sp.getInt("boidsSize", 4) / 100f;
-		int model = sp.getInt("model", 0xff000000);
+		int model = sp.getInt("model", 0xff0099CC);
 
 		Boid.initModel(size, model);
 
