@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:seekbar="http://schemas.android.com/apk/res-auto" >
 
-    <ListPreference
-        android:defaultValue="150"
-        android:entries="@array/count"
-        android:entryValues="@array/countValues"
-        android:key="count"
+    <com.mnm.seekbarpreference.SeekBarPreference
+        android:defaultValue="100"
+        android:dialogTitle="@string/dialog_title"
+        android:key="boidsCount"
+        android:persistent="true"
         android:summary="Deffine how may boids will be shown"
-        android:title="Boids Number" />
-    <ListPreference
-        android:defaultValue="0.04"
-        android:entries="@array/size"
-        android:entryValues="@array/sizeValues"
-        android:key="size"
-        android:summary="Deffine boid size"
-        android:title="Boid size" />
+        android:title="Boids Number"
+        seekbar:maxValue="400"
+        seekbar:minValue="15" />
+    <com.mnm.seekbarpreference.SeekBarPreference
+        android:defaultValue="4"
+        android:dialogTitle="@string/dialog_title"
+        android:key="boidsSize"
+        android:persistent="true"
+        android:summary="Deffine boids size"
+        android:title="Boids Size"
+        seekbar:maxValue="10"
+        seekbar:minValue="1" />
 
     <net.margaritov.preference.colorpicker.ColorPickerPreference
         android:defaultValue="@integer/COLOR_BLACK"

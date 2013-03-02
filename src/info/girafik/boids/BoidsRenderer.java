@@ -133,7 +133,7 @@ public class BoidsRenderer implements Renderer {
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		SharedPreferences sp = PreferenceManager
 				.getDefaultSharedPreferences(context);
-		float size = Float.parseFloat(sp.getString("size", "0.04"));
+		float size = sp.getInt("boidsSize", 4) / 100f;
 		int model = sp.getInt("model", 0xff000000);
 
 		Boid.initModel(size, model);
@@ -143,7 +143,7 @@ public class BoidsRenderer implements Renderer {
 		g = Color.green(backgroud) / 255f;
 		b = Color.blue(backgroud) / 255f;
 
-		int count = Integer.parseInt(sp.getString("count", "150"));
+		int count = sp.getInt("boidsCount", 100);
 		boids = new Boid[count];
 		newBoids = new Boid[boids.length];
 		for (int i = 0; i < boids.length; i++) {
