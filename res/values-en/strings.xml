@@ -3,11 +3,11 @@
     <string name="app_name">Boids</string>
     <string name="boids_wallpaper">Boids</string>
     <string name="count_title">Boids Number</string>
-    <string name="count_summary">Define number of Boids</string>
     <string name="size_title">Boid Size</string>
-    <string name="size_summary">Define size of the Boid</string>
     <string name="background_title">Background color</string>
     <string name="background_summary">Define background color</string>
     <string name="model_title">Boid color</string>
     <string name="model_summary">Define color of the Boid</string>
+    <string name="count_summary">Current value: %1$d</string>
+    <string name="size_summary">Current value: %1$d</string>
 </resources>

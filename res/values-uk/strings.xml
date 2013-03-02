@@ -7,7 +7,7 @@
     <string name="boids_wallpaper">Боіди	</string>
     <string name="model_title">Колір Боіду</string>
     <string name="size_title">Розмір Боіду</string>
-    <string name="count_summary">Вкажість кількість Боідів</string>
-    <string name="size_summary">Вкажіть розмір Боіду	</string>
+    <string name="count_summary">Поточне значення: %1$d</string>
+    <string name="size_summary">Поточне значення: %1$d</string>
     <string name="app_name">Боіди</string>
 </resources>
