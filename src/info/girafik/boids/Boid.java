@@ -46,10 +46,10 @@ public class Boid {
 		};
 
 		float colors[] = {//
-				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
-				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
-				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
-				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, // 
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, //
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, //
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, //
+				(Color.red(model) - 10)/255f, (Color.green(model) - 10)/255f, (Color.blue(model) - 10)/255f, 1.0f, //
 				(Color.red(model) + 10)/255f, (Color.green(model) + 10)/255f, (Color.blue(model) + 10)/255f, 1.0f // nose
 		};
 

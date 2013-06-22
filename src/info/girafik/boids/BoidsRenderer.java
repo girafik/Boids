@@ -13,10 +13,11 @@ import android.preference.PreferenceManager;
 import android.view.Surface;
 import android.view.WindowManager;
 
+import java.util.BitSet;
+
 public class BoidsRenderer implements Renderer {
 
 	private static final int NEIGHBOURS = 7;
-	static final float RADIUS = 0.05f;
 	private static float DISTANCE;
 	Boid boids[];
 	Boid newBoids[];
@@ -27,20 +28,34 @@ public class BoidsRenderer implements Renderer {
 	private static Vector tempVector = new Vector(0, 0, 0);
 	float[][] distances;
 	private int[][] neigbours;
+    private BitSet[][] grid;
 	private float[] temp_dists = new float[NEIGHBOURS];
 	private float ratio;
 	private float r;
 	private float g;
 	private float b;
 
-	public BoidsRenderer(Context context) {
+    long startTime = System.currentTimeMillis();
+    long dt;
+
+
+    public BoidsRenderer(Context context) {
 		this.context = context;
 	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
 
-		calculateScene();
+        dt = System.currentTimeMillis() - startTime;
+        if (dt < 30){
+            try {
+                Thread.sleep(30 - dt);
+            } catch (InterruptedException e) {
+            }
+        }
+        startTime = System.currentTimeMillis();
+
+        calculateScene();
 
 		gl.glClearColor(r, g, b, 1.0f);
 		gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -61,44 +76,71 @@ public class BoidsRenderer implements Renderer {
 
 			boid.draw(gl);
 		}
-
 	}
 
-	private void calculateScene() {
-		for (int i = 0; i < boids.length; i++) {
-			Boid current = boids[i];
-			for (int j = i + 1; j < boids.length; j++) {
-				float distance = tempVector.copyFrom(current.location)
-						.subtract(boids[j].location).magnitude2();
-				distances[i][j] = distance;
-				distances[j][i] = distance;
-			}
-		}
 
-		for (int i = 0; i < boids.length; i++) {
-			System.arraycopy(distances[i], 0, temp_dists, 0, NEIGHBOURS);
-			for (int j = 0; j < NEIGHBOURS; j++) {
-				neigbours[i][j] = j;
-			}
+    private int index(float x){
+        if(Math.abs(x)>4f){
+            x = (x>0?1:1)*4f;
+        }
+        x += 4f;
+        x *= 3;
+        if (x>=24){
+            x=23;
+        }
+        return (int) Math.floor(x);
+    }
 
-			for (int j = NEIGHBOURS; j < boids.length; j++) {
-				for (int k = 0; k < temp_dists.length; k++) {
-					if (temp_dists[k] > distances[i][j]) {
-						temp_dists[k] = distances[i][j];
-						neigbours[i][k] = j;
-						break;
-					}
-				}
-			}
-		}
+    private void calculateScene(){
+        for(int i=0; i<grid.length; i++){
+            for(int j=0; j<grid.length; j++){
+                grid[i][j].clear();
+                grid[j][i].clear();
+            }
+        }
 
-		for (int i = 0; i < boids.length; i++) {
-			newBoids[i].copyFrom(boids[i]);
-		}
-		for (int i = 0; i < boids.length; i++) {
-			boids[i].step(newBoids, neigbours[i], distances[i]);
-		}
-	}
+        for(int b = 0; b<boids.length; b++){
+            int i = index(boids[b].location.x);
+            int j = index(boids[b].location.y);
+            grid[i][j].set(b);
+        }
+
+        for(int b=0; b<boids.length; b++){
+            int count = 0;
+            int x = index(boids[b].location.x);
+            int y = index(boids[b].location.y);
+            int r = 0;
+            while(count < neigbours[b].length){
+                for(int i=Math.max(0, x-r); i<=x+r && i<grid.length; i++){
+                    for(int j=Math.max(0, y-r); j<=y+r && j<grid.length; j++){
+                        if(Math.abs(x-i) == r || Math.abs(y-j) == r){
+                            int bit = 0;
+                            while(grid[i][j].nextSetBit(bit) >= 0 && count < neigbours[b].length && !grid[i][j].isEmpty()){
+                                bit = grid[i][j].nextSetBit(bit);
+                                neigbours[b][count] = bit;
+                                count++;
+                                bit++;
+                            }
+                        }
+                    }
+                }
+                r++;
+            }
+            for(int n=0; n<neigbours[b].length; n++){
+                float distance = tempVector.copyFrom(boids[b].location)
+                        .subtract(boids[neigbours[b][n]].location).magnitude2();
+                distances[b][neigbours[b][n]] = distance;
+            }
+        }
+
+        for (int b = 0; b < boids.length; b++) {
+            newBoids[b].copyFrom(boids[b]);
+        }
+
+        for (int b = 0; b < boids.length; b++) {
+            boids[b].step(newBoids, neigbours[b], distances[b]);
+        }
+    }
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -152,6 +194,13 @@ public class BoidsRenderer implements Renderer {
 		}
 		distances = new float[boids.length][boids.length];
 		neigbours = new int[boids.length][NEIGHBOURS];
+        grid = new BitSet[64][64];
+        for(int i=0; i<grid.length; i++){
+            for(int j=0; j<grid.length; j++){
+                grid[i][j] = new BitSet();
+                grid[j][i] = new BitSet();
+            }
+        }
 
 		gl.glClearDepthf(1.0f);
 		gl.glEnable(GL10.GL_DEPTH_TEST);

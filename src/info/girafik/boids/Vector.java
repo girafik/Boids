@@ -76,9 +76,10 @@ public class Vector {
 		return this;
 	}
 
-	public void init() {
+	public Vector init() {
 		this.x = 0;
 		this.y = 0;
 		this.z = 0;
+        return this;
 	}
 }
